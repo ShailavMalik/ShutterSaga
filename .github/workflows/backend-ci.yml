@@ -1,1 +1,39 @@
-name:Backend CI - ShutterSaga
+name: Backend CI - ShutterSaga
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "server/**"
+      - ".github/workflows/backend-ci.yml"
+  pull_request:
+    branches: ["main"]
+    paths:
+      - "server/**"
+
+jobs:
+  ci:
+    name: Backend CI
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the repository
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      # Set up Node.js environment
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: server/package-lock.json 
+
+      # Install dependencies
+      - name: Install dependencies
+        working-directory: ./server
+        run: npm install
+
+      - name: Run ESlint
+        working-directory: ./server
+        run: npm run lint --if-present
