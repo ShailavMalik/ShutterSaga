@@ -1,4 +1,7 @@
-name: Backend CI - ShutterSaga
+name: Backend CI/CD - ShutterSaga
+
+env:
+  NODE_VERSION: "22"
 
 on:
   push:
@@ -12,6 +15,7 @@ on:
       - "server/**"
 
 jobs:
+  # ?Continuous Integration Job
   ci:
     name: Backend CI
     runs-on: ubuntu-latest
@@ -20,25 +24,26 @@ jobs:
       # Checkout the repository
       - name: Checkout repository
         uses: actions/checkout@v4
-      
+
       # Set up Node.js environment
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "22"
+          node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
-          cache-dependency-path: server/package-lock.json 
+          cache-dependency-path: server/package-lock.json
 
       # Install dependencies
       - name: Install dependencies
         working-directory: ./server
         run: npm install
 
+      # Run tests
       - name: Run ESlint
         working-directory: ./server
         run: npm run lint --if-present
 
-
+  # ?Deployment Job
   deploy:
     name: Deploy Backend to Azure App Service
     needs: ci
@@ -46,24 +51,25 @@ jobs:
     if: github.ref == 'refs/heads/main'
 
     steps:
+      # Checkout the repository
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # Set up Node.js environment
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "22"
+          node-version: ${{ env.NODE_VERSION }}
 
+      # Install production dependencies
       - name: Install production dependencies
         working-directory: ./server
         run: npm install --production
 
+      # Deploy to Azure Web App
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
           app-name: "ShutterSaga-Backend"
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
           package: ./server
-
-
-        
