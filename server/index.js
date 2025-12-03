@@ -141,8 +141,8 @@ app.use((req, res) => {
   res.status(404).json({ message: "Endpoint not found" });
 });
 
-// Global error handler
-app.use((err, req, res, next) => {
+// Global error handler (next param required by Express for error middleware signature)
+app.use((err, req, res, _next) => {
   // Log error details (but don't expose them in production)
   console.error("Server Error:", err.message);
   if (!isProduction) {
