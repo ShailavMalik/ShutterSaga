@@ -10,20 +10,6 @@ import { authAPI } from "../services/api";
 const AuthContext = createContext(null);
 
 /**
- * Custom hook to use auth context
- * Makes it easy to access auth state from any component
- */
-export function useAuth() {
-  const context = useContext(AuthContext);
-
-  if (!context) {
-    throw new Error("useAuth must be used inside an AuthProvider");
-  }
-
-  return context;
-}
-
-/**
  * Auth Provider Component
  * Wraps the app and provides authentication state to all children
  */
@@ -31,42 +17,57 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  /**
+   * Helper to clear auth data from storage
+   */
+  function clearStoredAuth() {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+  }
+
   // Check if user is already logged in when app loads
   useEffect(() => {
-    checkExistingSession();
-  }, []);
+    let isMounted = true;
 
-  /**
-   * Check if there's a valid session from a previous login
-   */
-  async function checkExistingSession() {
-    const token = localStorage.getItem("token");
+    async function checkExistingSession() {
+      const token = localStorage.getItem("token");
 
-    if (token) {
-      try {
-        // Verify the token is still valid by fetching user data
-        const response = await authAPI.getMe();
-        setUser(response.data.user);
-      } catch (error) {
-        // Token is invalid or expired, clean up
-        clearStoredAuth();
+      if (token) {
+        try {
+          // Verify the token is still valid by fetching user data
+          const response = await authAPI.getMe();
+          if (isMounted) {
+            setUser(response.data.user);
+          }
+        } catch {
+          // Token is invalid or expired, clean up
+          clearStoredAuth();
+        }
+      }
+
+      if (isMounted) {
+        setLoading(false);
       }
     }
 
-    setLoading(false);
-  }
+    checkExistingSession();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   /**
    * Log in with email and password
    */
   async function login(email, password) {
     const response = await authAPI.login(email, password);
-    const { token, user } = response.data;
+    const { token, user: userData } = response.data;
 
     // Store auth data
     localStorage.setItem("token", token);
-    localStorage.setItem("user", JSON.stringify(user));
-    setUser(user);
+    localStorage.setItem("user", JSON.stringify(userData));
+    setUser(userData);
 
     return response.data;
   }
@@ -76,12 +77,12 @@ export function AuthProvider({ children }) {
    */
   async function register(username, email, password) {
     const response = await authAPI.register(username, email, password);
-    const { token, user } = response.data;
+    const { token, user: userData } = response.data;
 
     // Store auth data (user is logged in immediately after registration)
     localStorage.setItem("token", token);
-    localStorage.setItem("user", JSON.stringify(user));
-    setUser(user);
+    localStorage.setItem("user", JSON.stringify(userData));
+    setUser(userData);
 
     return response.data;
   }
@@ -92,14 +93,6 @@ export function AuthProvider({ children }) {
   function logout() {
     clearStoredAuth();
     setUser(null);
-  }
-
-  /**
-   * Helper to clear auth data from storage
-   */
-  function clearStoredAuth() {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
   }
 
   // Values available to consuming components
@@ -113,4 +106,18 @@ export function AuthProvider({ children }) {
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
+
+/**
+ * Custom hook to use auth context
+ * Makes it easy to access auth state from any component
+ */
+export function useAuth() {
+  const context = useContext(AuthContext);
+
+  if (!context) {
+    throw new Error("useAuth must be used inside an AuthProvider");
+  }
+
+  return context;
 }

@@ -19,6 +19,19 @@ function GalleryPage() {
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
 
+  // Lightbox navigation functions (defined with useCallback for useEffect dependency)
+  const goToPrevious = useCallback(() => {
+    setCurrentPhotoIndex((prev) => (prev === 0 ? photos.length - 1 : prev - 1));
+  }, [photos.length]);
+
+  const goToNext = useCallback(() => {
+    setCurrentPhotoIndex((prev) => (prev === photos.length - 1 ? 0 : prev + 1));
+  }, [photos.length]);
+
+  const closeLightbox = useCallback(() => {
+    setCurrentPhotoIndex(null);
+  }, []);
+
   // Load photos when component mounts
   useEffect(() => {
     loadPhotos();
@@ -44,7 +57,7 @@ function GalleryPage() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [currentPhotoIndex, photos.length]);
+  }, [currentPhotoIndex, goToPrevious, goToNext, closeLightbox]);
 
   // Fetch all photos from the API
   async function loadPhotos() {
@@ -52,12 +65,16 @@ function GalleryPage() {
       setIsLoading(true);
       const response = await photosAPI.getAll();
       setPhotos(response.data.photos);
-    } catch (err) {
+    } catch {
       setError("Failed to load your photos. Please try again.");
     } finally {
       setIsLoading(false);
     }
   }
+
+  // Get current photo for lightbox
+  const currentPhoto =
+    currentPhotoIndex !== null ? photos[currentPhotoIndex] : null;
 
   // Delete a photo
   async function handleDelete(photoId, e) {
@@ -79,33 +96,17 @@ function GalleryPage() {
       if (currentPhoto?._id === photoId) {
         closeLightbox();
       }
-    } catch (err) {
+    } catch {
       alert("Failed to delete photo. Please try again.");
     } finally {
       setDeletingId(null);
     }
   }
 
-  // Lightbox functions
+  // Open lightbox
   function openLightbox(index) {
     setCurrentPhotoIndex(index);
   }
-
-  function closeLightbox() {
-    setCurrentPhotoIndex(null);
-  }
-
-  function goToPrevious() {
-    setCurrentPhotoIndex((prev) => (prev === 0 ? photos.length - 1 : prev - 1));
-  }
-
-  function goToNext() {
-    setCurrentPhotoIndex((prev) => (prev === photos.length - 1 ? 0 : prev + 1));
-  }
-
-  // Get current photo for lightbox
-  const currentPhoto =
-    currentPhotoIndex !== null ? photos[currentPhotoIndex] : null;
 
   // Loading state
   if (isLoading) {
