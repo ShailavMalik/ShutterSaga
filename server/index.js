@@ -28,13 +28,17 @@ const isProduction = process.env.NODE_ENV === "production";
 
 // Allowed origins for CORS
 const allowedOrigins = process.env.ALLOWED_ORIGINS
-  ? process.env.ALLOWED_ORIGINS.split(",").map((o) => o.trim())
+  ? process.env.ALLOWED_ORIGINS.split(",")
+      .map((o) => o.trim())
+      .filter((o) => o.length > 0) // Remove empty strings
   : [
       "http://localhost:5173",
       "http://localhost:3000",
       "https://shuttersaga.shailavmalik.me",
       "http://shuttersaga.shailavmalik.me",
     ];
+
+console.log("✅ Allowed CORS origins:", allowedOrigins);
 
 // CORS options
 const corsOptions = {
@@ -45,21 +49,24 @@ const corsOptions = {
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      console.log(`CORS blocked origin: ${origin}`);
+      console.warn(
+        `⚠️  CORS blocked origin: "${origin}" (not in ${JSON.stringify(
+          allowedOrigins
+        )})`
+      );
       callback(new Error("Not allowed by CORS"));
     }
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
-  optionsSuccessStatus: 200, // Some legacy browsers choke on 204
+  maxAge: 3600, // Cache preflight for 1 hour
+  optionsSuccessStatus: 200,
 };
 
 // Enable CORS - must be before other middleware
+// The cors middleware automatically handles OPTIONS preflight requests
 app.use(cors(corsOptions));
-
-// Handle preflight requests explicitly for all routes
-app.options("*", cors(corsOptions));
 
 /* ============================================
    Security Middleware
