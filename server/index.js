@@ -68,6 +68,9 @@ const corsOptions = {
 // The cors middleware automatically handles OPTIONS preflight requests
 app.use(cors(corsOptions));
 
+// Explicitly handle OPTIONS for all routes (Express 5 safe syntax)
+app.options(/.*/, cors(corsOptions));
+
 /* ============================================
    Security Middleware
 ============================================ */
