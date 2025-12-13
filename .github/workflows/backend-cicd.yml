@@ -8,14 +8,15 @@ on:
     branches: ["main"]
     paths:
       - "server/**"
-      - ".github/workflows/backend-ci.yml"
+      - ".github/workflows/backend-cicd.yml"
+      - "render.yaml"
   pull_request:
     branches: ["main"]
     paths:
       - "server/**"
 
 jobs:
-  # ?Continuous Integration Job
+  # Continuous Integration Job
   ci:
     name: Backend CI
     runs-on: ubuntu-latest
@@ -38,9 +39,10 @@ jobs:
         working-directory: ./server
         run: npm install
 
-      # Run tests
-      - name: Run ESlint
+      # Run linting
+      - name: Run ESLint
         working-directory: ./server
         run: npm run lint --if-present
 
-  # Continuous deployment is handled natively by Render through GitHub integration
+  # Render handles deployment automatically via GitHub integration
+  # No manual deployment job needed - just ensure render.yaml is correct
