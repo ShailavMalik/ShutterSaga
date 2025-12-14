@@ -88,6 +88,32 @@ export function AuthProvider({ children }) {
   }
 
   /**
+   * Log in with Google credential
+   */
+  async function loginWithGoogle(credential) {
+    const response = await authAPI.googleLogin(credential);
+    const { token, user: userData } = response.data;
+
+    localStorage.setItem("token", token);
+    localStorage.setItem("user", JSON.stringify(userData));
+    setUser(userData);
+
+    return response.data;
+  }
+
+  /**
+   * Refresh current user from backend
+   */
+  async function refreshUser() {
+    try {
+      const res = await authAPI.getMe();
+      setUser(res.data.user);
+    } catch {
+      // ignore
+    }
+  }
+
+  /**
    * Log out the current user
    */
   function logout() {
@@ -100,6 +126,8 @@ export function AuthProvider({ children }) {
     user,
     loading,
     login,
+    loginWithGoogle,
+    refreshUser,
     register,
     logout,
     isAuthenticated: !!user,

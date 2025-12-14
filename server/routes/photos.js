@@ -47,66 +47,79 @@ const upload = multer({
 router.post(
   "/upload",
   authenticateToken,
-  upload.single("photo"),
+  upload.array("photos", 10),
   async (req, res) => {
     try {
-      // Validate file was uploaded
-      if (!req.file) {
+      const files = req.files || [];
+
+      if (!files.length) {
         return res
           .status(400)
-          .json({ message: "Please select a photo to upload" });
+          .json({ message: "Please select at least one photo to upload" });
       }
 
-      const { title, description } = req.body;
+      const { title, description, defaultCaption } = req.body;
 
-      // Title is required
-      if (!title || !title.trim()) {
-        return res
-          .status(400)
-          .json({ message: "Please provide a title for your photo" });
-      }
+      const uploads = await Promise.all(
+        files.map(async (file, index) => {
+          const blobName = generateUniqueBlobName(
+            file.originalname,
+            req.user.username
+          );
+          const blobUrl = await uploadToAzure(file, blobName);
 
-      // Generate a unique name in user's directory and upload to Azure
-      const blobName = generateUniqueBlobName(
-        req.file.originalname,
-        req.user.username
+          const photo = new Photo({
+            title: (title || file.originalname || "Untitled").trim(),
+            description: (description || defaultCaption || "").trim(),
+            blobUrl,
+            blobName,
+            user: req.user._id,
+            contentType: file.mimetype,
+            size: file.size,
+          });
+
+          await photo.save();
+
+          return {
+            id: photo._id,
+            title: photo.title,
+            description: photo.description,
+            blobUrl: photo.blobUrl,
+            createdAt: photo.createdAt,
+          };
+        })
       );
-      const blobUrl = await uploadToAzure(req.file, blobName);
-
-      // Save the photo metadata to our database
-      const photo = new Photo({
-        title: title.trim(),
-        description: description?.trim() || "",
-        blobUrl,
-        blobName,
-        user: req.user._id,
-        contentType: req.file.mimetype,
-        size: req.file.size,
-      });
-
-      await photo.save();
 
       res.status(201).json({
-        message: "Photo uploaded successfully!",
-        photo: {
-          id: photo._id,
-          title: photo.title,
-          description: photo.description,
-          blobUrl: photo.blobUrl,
-          createdAt: photo.createdAt,
-        },
+        message: `Uploaded ${uploads.length} photo(s) successfully!`,
+        photos: uploads,
       });
     } catch (error) {
       console.error("Upload error:", error.message);
       res.status(500).json({
-        message: error.message || "Failed to upload photo. Please try again.",
+        message: error.message || "Failed to upload photos. Please try again.",
       });
     }
   }
 );
 
 /**
- * GET /api/photos
+ * GET /api/photos/export
+ * Get all photos for current user with sizes for export
+ */
+router.get("/export", authenticateToken, async (req, res) => {
+  try {
+    const photos = await Photo.find({ user: req.user._id }).select(
+      "title description blobUrl size createdAt"
+    );
+    res.json({ photos });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to load photos for export" });
+  }
+});
+
+/**
+ * POST /api/photos
  * Get all photos for the current user
  */
 router.get("/", authenticateToken, async (req, res) => {

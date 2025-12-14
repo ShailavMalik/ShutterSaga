@@ -1,6 +1,5 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import Navbar from "./Navbar";
 import LoadingSpinner from "./LoadingSpinner";
 
 const ProtectedRoute = () => {
@@ -16,7 +15,6 @@ const ProtectedRoute = () => {
 
   return (
     <>
-      <Navbar />
       <main className="main-content">
         <Outlet />
       </main>

@@ -24,6 +24,7 @@
     "node": ">=18.0.0"
   },
   "dependencies": {
+    "google-auth-library": "^9.15.0",
     "@azure/storage-blob": "^12.29.1",
     "bcryptjs": "^3.0.3",
     "compression": "^1.8.1",

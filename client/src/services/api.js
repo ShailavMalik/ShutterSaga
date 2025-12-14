@@ -96,14 +96,21 @@ export const authAPI = {
   register: (username, email, password) =>
     api.post("/auth/register", { username, email, password }),
 
+  googleLogin: (credential) => api.post("/auth/google", { credential }),
+
   getMe: () => api.get("/auth/me"),
+  updateAvatar: (formData) =>
+    api.post("/auth/avatar", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    }),
+  getStorageUsage: () => api.get("/auth/storage-usage"),
 };
 
 /* ============================================
    Photos API
 ============================================ */
 export const photosAPI = {
-  // Upload a new photo (multipart form data)
+  // Upload new photos (multipart form data)
   upload: (formData) =>
     api.post("/photos/upload", formData, {
       headers: { "Content-Type": "multipart/form-data" },
@@ -111,6 +118,9 @@ export const photosAPI = {
 
   // Get all photos for current user
   getAll: () => api.get("/photos"),
+
+  // Get photos for export with sizes
+  getExport: () => api.get("/photos/export"),
 
   // Get a single photo by ID
   getOne: (id) => api.get(`/photos/${id}`),
