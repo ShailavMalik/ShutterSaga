@@ -1,4 +1,4 @@
-name: Frontend CI/CD - ShutterSaga
+name: Frontend CI - ShutterSaga
 
 env:
   NODE_VERSION: "22"

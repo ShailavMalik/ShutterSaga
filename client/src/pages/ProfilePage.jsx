@@ -98,8 +98,8 @@ function ProfilePage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 pb-20 sm:pb-8">
       <div className="max-w-2xl mx-auto">
-        <div className="bg-gradient-to-br from-white to-indigo-50 rounded-2xl shadow-[0_8px_32px_rgba(99,102,241,0.15)] p-5 sm:p-8 border border-indigo-200/20">
-          <h1 className="m-0 text-xl sm:text-2xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-400 bg-clip-text text-transparent">
+        <div className="bg-linear-to-br from-white to-indigo-50 rounded-2xl shadow-[0_8px_32px_rgba(99,102,241,0.15)] p-5 sm:p-8 border border-indigo-200/20">
+          <h1 className="m-0 text-xl sm:text-2xl bg-linear-to-r from-indigo-500 via-purple-500 to-pink-400 bg-clip-text text-transparent">
             Profile
           </h1>
 
@@ -107,7 +107,7 @@ function ProfilePage() {
             <div
               className={`${
                 avatarAnim ? "animate-pulse" : ""
-              } w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-base sm:text-lg shadow-md overflow-hidden cursor-pointer`}>
+              } w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-linear-to-r from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-base sm:text-lg shadow-md overflow-hidden cursor-pointer`}>
               {user?.avatarUrl ? (
                 <img
                   src={user.avatarUrl}
@@ -121,7 +121,7 @@ function ProfilePage() {
               )}
             </div>
             <div>
-              <div className="font-bold text-base sm:text-lg bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-400 bg-clip-text text-transparent">
+              <div className="font-bold text-base sm:text-lg bg-linear-to-r from-indigo-500 via-purple-500 to-pink-400 bg-clip-text text-transparent">
                 {user?.username}
               </div>
               <div className="text-slate-500 text-sm sm:text-base">
@@ -156,7 +156,7 @@ function ProfilePage() {
                   }
                 }}
               />
-              <span className="inline-block px-4 py-2 rounded-lg border-2 border-indigo-500 text-indigo-600 bg-white font-semibold transition-all cursor-pointer hover:bg-gradient-to-r hover:from-indigo-500 hover:via-purple-500 hover:to-pink-400 hover:text-white hover:shadow-md">
+              <span className="inline-block px-4 py-2 rounded-lg border-2 border-indigo-500 text-indigo-600 bg-white font-semibold transition-all cursor-pointer hover:bg-linear-to-r hover:from-indigo-500 hover:via-purple-500 hover:to-pink-400 hover:text-white hover:shadow-md hover:cursor-pointer">
                 {uploading ? "Updating..." : "Change Avatar"}
               </span>
             </label>
@@ -166,9 +166,9 @@ function ProfilePage() {
           <h2 className="mt-8 text-xl font-semibold text-gray-800">
             Storage Usage
           </h2>
-          <div className="bg-gradient-to-br from-indigo-500/10 to-pink-400/10 rounded-xl h-4 overflow-hidden mt-3 border border-indigo-500/20">
+          <div className="bg-linear-to-br from-indigo-500/10 to-pink-400/10 rounded-xl h-4 overflow-hidden mt-3 border border-indigo-500/20">
             <div
-              className="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-400 shadow-[0_0_10px_rgba(99,102,241,0.3)] transition-all duration-500"
+              className="h-full bg-linear-to-r from-indigo-500 via-purple-500 to-pink-400 shadow-[0_0_10px_rgba(99,102,241,0.3)] transition-all duration-500"
               style={{ width: `${percent}%` }}
             />
           </div>
@@ -178,12 +178,12 @@ function ProfilePage() {
 
           <div className="flex gap-3 mt-5">
             <button
-              className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-400 text-white font-semibold shadow-md transition-all hover:-translate-y-0.5 hover:shadow-lg"
+              className="px-4 py-2.5 rounded-xl bg-linear-to-r from-indigo-500 via-purple-500 to-pink-400 text-white font-semibold shadow-md transition-all hover:-translate-y-0.5 hover:shadow-lg hover:cursor-pointer"
               onClick={handleManageStorage}>
               Manage Storage
             </button>
             <button
-              className="px-4 py-2.5 rounded-xl border-2 border-indigo-500 bg-white text-indigo-600 font-semibold transition-all hover:bg-indigo-50 hover:shadow-md"
+              className="px-4 py-2.5 rounded-xl border-2 border-indigo-500 bg-white text-indigo-600 font-semibold transition-all hover:bg-indigo-50 hover:shadow-md hover:cursor-pointer"
               onClick={handleExportData}
               disabled={exporting}>
               {exporting ? "Exporting..." : "Export Data"}
@@ -198,10 +198,10 @@ function ProfilePage() {
               Connect and import photos in a future update.
             </p>
             <button
-              className="mt-3 px-4 py-2.5 rounded-xl border-2 border-indigo-500 bg-white text-indigo-600 font-semibold transition-all hover:bg-gradient-to-r hover:from-indigo-500 hover:via-purple-500 hover:to-pink-400 hover:text-white hover:shadow-md"
+              className="mt-3 px-4 py-2.5 rounded-xl border-2 border-indigo-500 bg-white text-indigo-600 font-semibold transition-all hover:bg-linear-to-r hover:from-indigo-500 hover:via-purple-500 hover:to-pink-400 hover:text-white hover:shadow-md hover:cursor-pointer"
               onClick={() => setShowDriveModal(true)}>
               Import from Google Drive{" "}
-              <span className="ml-1 text-xs bg-gradient-to-r from-yellow-400 to-amber-500 text-amber-900 px-1.5 py-0.5 rounded font-bold">
+              <span className="ml-1 text-xs bg-linear-to-r from-yellow-400 to-amber-500 text-amber-900 px-1.5 py-0.5 rounded font-bold">
                 β
               </span>
             </button>
@@ -218,7 +218,7 @@ function ProfilePage() {
             className="bg-white rounded-2xl w-[90%] max-w-xl max-h-[80vh] overflow-y-auto shadow-2xl"
             onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-between items-center p-5 border-b border-gray-200">
-              <h3 className="text-xl font-semibold bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-400 bg-clip-text text-transparent">
+              <h3 className="text-xl font-semibold bg-linear-to-r from-indigo-500 via-purple-500 to-pink-400 bg-clip-text text-transparent">
                 Manage Storage
               </h3>
               <button
@@ -272,7 +272,7 @@ function ProfilePage() {
             className="bg-white rounded-2xl w-[90%] max-w-xl shadow-2xl"
             onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-between items-center p-5 border-b border-gray-200">
-              <h3 className="text-xl font-semibold bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-400 bg-clip-text text-transparent">
+              <h3 className="text-xl font-semibold bg-linear-to-r from-indigo-500 via-purple-500 to-pink-400 bg-clip-text text-transparent">
                 Import from Google Drive
               </h3>
               <button

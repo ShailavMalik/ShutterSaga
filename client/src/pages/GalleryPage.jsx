@@ -19,7 +19,6 @@ function GalleryPage() {
   const [deletingId, setDeletingId] = useState(null);
   const [sortBy, setSortBy] = useState("newest");
   const [isSlideshow, setIsSlideshow] = useState(false);
-  const [slideshowIndex, setSlideshowIndex] = useState(0);
 
   const sortedPhotos = useMemo(() => {
     return [...photos].sort((a, b) => {
@@ -176,7 +175,7 @@ function GalleryPage() {
       {/* Header */}
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 sm:p-6 rounded-2xl bg-white/70 backdrop-blur-xl border border-gray-200 shadow-[0_8px_32px_rgba(0,0,0,0.08)]">
         <div>
-          <h1 className="m-0 text-2xl sm:text-3xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 bg-clip-text text-transparent">
+          <h1 className="m-0 text-2xl sm:text-3xl font-bold bg-linear-to-r from-indigo-600 via-purple-600 to-pink-500 bg-clip-text text-transparent">
             My Gallery
           </h1>
           <p className="text-gray-500 mt-1 sm:mt-2 text-sm sm:text-base">
@@ -231,12 +230,12 @@ function GalleryPage() {
                   loading="lazy"
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                   <span className="text-white text-2xl sm:text-3xl">🔍</span>
                 </div>
                 <button
-                  className="absolute top-2 right-2 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/90 backdrop-blur-sm text-gray-700 cursor-pointer transition-all duration-200 opacity-0 group-hover:opacity-100 hover:bg-red-500 hover:text-white hover:scale-110 disabled:opacity-50 flex items-center justify-center shadow-md text-sm"
+                  className="absolute top-2 right-2 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/90 backdrop-blur-sm text-gray-700 cursor-pointer transition-all duration-200 opacity-0 group-hover:opacity-100 hover:bg-red-500 hover:text-white hover:scale-110 hover:cursor-pointer disabled:opacity-50 flex items-center justify-center shadow-md text-sm"
                   onClick={(e) => handleDelete(photo._id, e)}
                   disabled={deletingId === photo._id}
                   aria-label="Delete photo">
@@ -264,12 +263,12 @@ function GalleryPage() {
       {/* Lightbox with navigation */}
       {currentPhoto && (
         <div
-          className="fixed inset-0 bg-gradient-to-br from-black/95 to-[#1e143c]/95 flex items-center justify-center z-[1000] p-5"
+          className="fixed inset-0 bg-linear-to-br from-black/95 to-[#1e143c]/95 flex items-center justify-center z-[1000] p-5"
           onClick={closeLightbox}>
           {/* Header with controls */}
           <div className="absolute top-5 left-5 flex items-center gap-4 z-10">
             <button
-              className="w-11 h-11 border-2 border-white/30 rounded-full bg-gradient-to-br from-indigo-500/30 to-pink-400/20 text-white text-xl cursor-pointer transition-all backdrop-blur-md hover:from-indigo-500/50 hover:to-pink-400/40 hover:border-white/60 hover:scale-105"
+              className="w-11 h-11 border-2 border-white/30 rounded-full bg-linear-to-br from-indigo-500/30 to-pink-400/20 text-white text-xl cursor-pointer transition-all backdrop-blur-md hover:from-indigo-500/50 hover:to-pink-400/40 hover:border-white/60 hover:scale-105"
               onClick={(e) => {
                 e.stopPropagation();
                 setIsSlideshow(!isSlideshow);
@@ -285,7 +284,7 @@ function GalleryPage() {
 
           {/* Close button */}
           <button
-            className="absolute top-5 right-5 w-11 h-11 border-2 border-white/30 rounded-full bg-gradient-to-br from-[#f05d96]/30 to-[#ff7f50]/20 text-white text-2xl cursor-pointer transition-all z-10 backdrop-blur-md hover:from-[#f05d96]/50 hover:to-[#ff7f50]/40 hover:border-white/60 hover:scale-105"
+            className="absolute top-5 right-5 w-11 h-11 border-2 border-white/30 rounded-full bg-linear-to-br from-[#f05d96]/30 to-[#ff7f50]/20 text-white text-2xl cursor-pointer transition-all z-10 backdrop-blur-md hover:from-[#f05d96]/50 hover:to-[#ff7f50]/40 hover:border-white/60 hover:scale-105"
             onClick={closeLightbox}
             aria-label="Close lightbox">
             ✕
@@ -294,7 +293,7 @@ function GalleryPage() {
           {/* Previous button */}
           {photos.length > 1 && (
             <button
-              className="absolute top-1/2 -translate-y-1/2 left-5 w-[50px] h-[50px] border-2 border-white/30 rounded-full bg-gradient-to-br from-indigo-500/30 to-pink-400/20 text-white text-3xl cursor-pointer transition-all flex items-center justify-center z-10 backdrop-blur-md hover:from-indigo-500/50 hover:to-pink-400/40 hover:border-white/60 hover:scale-110"
+              className="absolute top-1/2 -translate-y-1/2 left-5 w-[50px] h-[50px] border-2 border-white/30 rounded-full bg-linear-to-br from-indigo-500/30 to-pink-400/20 text-white text-3xl cursor-pointer transition-all flex items-center justify-center z-10 backdrop-blur-md hover:from-indigo-500/50 hover:to-pink-400/40 hover:border-white/60 hover:scale-110"
               onClick={(e) => {
                 e.stopPropagation();
                 goToPrevious();
@@ -327,7 +326,7 @@ function GalleryPage() {
           {/* Next button */}
           {photos.length > 1 && (
             <button
-              className="absolute top-1/2 -translate-y-1/2 right-5 w-[50px] h-[50px] border-2 border-white/30 rounded-full bg-gradient-to-br from-indigo-500/30 to-pink-400/20 text-white text-3xl cursor-pointer transition-all flex items-center justify-center z-10 backdrop-blur-md hover:from-indigo-500/50 hover:to-pink-400/40 hover:border-white/60 hover:scale-110"
+              className="absolute top-1/2 -translate-y-1/2 right-5 w-[50px] h-[50px] border-2 border-white/30 rounded-full bg-linear-to-br from-indigo-500/30 to-pink-400/20 text-white text-3xl cursor-pointer transition-all flex items-center justify-center z-10 backdrop-blur-md hover:from-indigo-500/50 hover:to-pink-400/40 hover:border-white/60 hover:scale-110"
               onClick={(e) => {
                 e.stopPropagation();
                 goToNext();

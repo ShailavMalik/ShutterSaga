@@ -61,7 +61,7 @@ router.post(
       const { title, description, defaultCaption } = req.body;
 
       const uploads = await Promise.all(
-        files.map(async (file, index) => {
+        files.map(async (file) => {
           const blobName = generateUniqueBlobName(
             file.originalname,
             req.user.username
@@ -113,7 +113,7 @@ router.get("/export", authenticateToken, async (req, res) => {
       "title description blobUrl size createdAt"
     );
     res.json({ photos });
-  } catch (error) {
+  } catch (_error) {
     res.status(500).json({ message: "Failed to load photos for export" });
   }
 });

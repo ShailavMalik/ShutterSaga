@@ -159,7 +159,12 @@ router.post("/google", async (req, res) => {
         password: jwt
           .sign({ sub: payload.sub }, process.env.JWT_SECRET)
           .slice(0, 12),
+        avatarUrl: payload.picture || "", // Use Google profile photo
       });
+    } else if (payload.picture && !user.avatarUrl) {
+      // Update existing user with Google avatar if they don't have one
+      user.avatarUrl = payload.picture;
+      await user.save();
     }
 
     const token = generateToken(user._id);
@@ -240,7 +245,7 @@ router.get("/storage-usage", authenticateToken, async (req, res) => {
     const usedBytes = agg?.[0]?.total || 0;
     const totalBytes = 1 * 1024 * 1024 * 1024; // 1GB
     res.json({ usedBytes, totalBytes });
-  } catch (e) {
+  } catch (_e) {
     res.status(500).json({ usedBytes: 0, totalBytes: 1 * 1024 * 1024 * 1024 });
   }
 });

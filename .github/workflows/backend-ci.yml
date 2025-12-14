@@ -1,4 +1,4 @@
-name: Backend CI/CD - ShutterSaga
+name: Backend CI - ShutterSaga
 
 env:
   NODE_VERSION: "22"

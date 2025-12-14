@@ -22,7 +22,7 @@ const Navbar = () => {
           onClick={() => navigate("/gallery")}
           className="flex items-center gap-2 sm:gap-3 cursor-pointer bg-transparent border-0 hover:opacity-80 transition-opacity">
           <span className="text-xl sm:text-2xl">📷</span>
-          <span className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 bg-clip-text text-transparent">
+          <span className="text-lg sm:text-2xl font-bold bg-linear-to-r from-indigo-600 via-purple-600 to-pink-500 bg-clip-text text-transparent">
             ShutterSaga
           </span>
         </button>
@@ -32,7 +32,7 @@ const Navbar = () => {
             to="/gallery"
             className={({ isActive }) =>
               isActive
-                ? "px-4 py-2 rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white font-semibold transition-all shadow-lg text-sm"
+                ? "px-4 py-2 rounded-full bg-linear-to-r from-indigo-500 via-purple-500 to-pink-500 text-white font-semibold transition-all shadow-lg text-sm"
                 : "px-4 py-2 rounded-full text-gray-600 font-medium hover:text-gray-900 hover:bg-gray-100 transition-all text-sm"
             }>
             Gallery
@@ -41,7 +41,7 @@ const Navbar = () => {
             to="/upload"
             className={({ isActive }) =>
               isActive
-                ? "px-4 py-2 rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white font-semibold transition-all shadow-lg text-sm"
+                ? "px-4 py-2 rounded-full bg-linear-to-r from-indigo-500 via-purple-500 to-pink-500 text-white font-semibold transition-all shadow-lg text-sm"
                 : "px-4 py-2 rounded-full text-gray-600 font-medium hover:text-gray-900 hover:bg-gray-100 transition-all text-sm"
             }>
             Upload
@@ -50,7 +50,7 @@ const Navbar = () => {
             to="/about"
             className={({ isActive }) =>
               isActive
-                ? "px-4 py-2 rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white font-semibold transition-all shadow-lg text-sm"
+                ? "px-4 py-2 rounded-full bg-linear-to-r from-indigo-500 via-purple-500 to-pink-500 text-white font-semibold transition-all shadow-lg text-sm"
                 : "px-4 py-2 rounded-full text-gray-600 font-medium hover:text-gray-900 hover:bg-gray-100 transition-all text-sm"
             }>
             About
@@ -60,7 +60,7 @@ const Navbar = () => {
         <div className="flex items-center gap-2 sm:gap-3">
           <NavLink
             to="/profile"
-            className="inline-flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full overflow-hidden shadow-md bg-gradient-to-br from-indigo-500 to-purple-600 border-2 border-white cursor-pointer hover:scale-110 hover:shadow-lg transition-all duration-300"
+            className="inline-flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full overflow-hidden shadow-md bg-linear-to-br from-indigo-500 to-purple-600 border-2 border-white cursor-pointer hover:scale-110 hover:shadow-lg transition-all duration-300"
             aria-label="Profile">
             {user?.avatarUrl ? (
               <img
@@ -76,7 +76,7 @@ const Navbar = () => {
           </NavLink>
           <button
             onClick={handleLogout}
-            className="hidden sm:block px-4 py-2 rounded-full bg-gray-100 text-gray-600 font-medium text-sm hover:bg-red-500 hover:text-white hover:shadow-md transition-all duration-300">
+            className="hidden sm:block px-4 py-2 rounded-full bg-gray-100 text-gray-600 font-medium text-sm hover:bg-red-500 hover:text-white hover:shadow-md hover:cursor-pointer transition-all duration-300">
             Logout
           </button>
         </div>
@@ -116,7 +116,7 @@ const Navbar = () => {
         </NavLink>
         <button
           onClick={handleLogout}
-          className="flex flex-col items-center gap-1 text-gray-500 font-medium text-xs bg-transparent border-0">
+          className="flex flex-col items-center gap-1 text-gray-500 font-medium text-xs bg-transparent border-0 hover:cursor-pointer">
           <span className="text-lg">🚪</span>
           Logout
         </button>

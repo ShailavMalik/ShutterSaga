@@ -66,7 +66,7 @@ function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 p-4 sm:p-5">
+    <div className="min-h-screen w-full flex items-center justify-center bg-linear-to-br from-indigo-600 via-purple-600 to-pink-500 p-4 sm:p-5">
       <div className="bg-white rounded-2xl p-6 sm:p-8 w-full max-w-md shadow-2xl">
         {/* Header */}
         <div className="text-center mb-6 sm:mb-8">
@@ -151,7 +151,7 @@ function LoginPage() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full py-3.5 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 text-white rounded-xl font-semibold text-base shadow-lg transition-all hover:-translate-y-0.5 hover:shadow-xl disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:translate-y-0">
+            className="w-full py-3.5 bg-linear-to-r from-indigo-600 via-purple-600 to-pink-500 text-white rounded-xl font-semibold text-base shadow-lg transition-all hover:-translate-y-0.5 hover:shadow-xl hover:cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:translate-y-0">
             {isSubmitting
               ? "Please wait..."
               : isLoginMode
@@ -169,7 +169,7 @@ function LoginPage() {
             <button
               type="button"
               onClick={toggleMode}
-              className="ml-1 text-indigo-600 font-semibold hover:underline bg-transparent border-0 cursor-pointer">
+              className="ml-1 text-indigo-600 font-semibold hover:underline hover:cursor-pointer bg-transparent border-0 cursor-pointer">
               {isLoginMode ? "Sign Up" : "Sign In"}
             </button>
           </p>

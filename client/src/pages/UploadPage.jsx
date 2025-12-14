@@ -70,7 +70,7 @@ function UploadPage() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 pb-20 sm:pb-8">
       <div className="max-w-xl mx-auto">
         <div className="bg-white/70 backdrop-blur-xl rounded-2xl p-5 sm:p-8 shadow-[0_8px_32px_rgba(0,0,0,0.08)] border border-gray-200">
-          <h1 className="m-0 text-2xl sm:text-3xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 bg-clip-text text-transparent">
+          <h1 className="m-0 text-2xl sm:text-3xl font-bold bg-linear-to-r from-indigo-600 via-purple-600 to-pink-500 bg-clip-text text-transparent">
             Upload Photos
           </h1>
           <p className="text-gray-500 mt-2 mb-6 sm:mb-8 text-sm sm:text-base">
@@ -107,7 +107,7 @@ function UploadPage() {
                   <button
                     type="button"
                     onClick={clearSelectedFile}
-                    className="mt-4 px-5 py-2.5 rounded-xl bg-gray-100 text-gray-600 font-medium transition-all hover:bg-red-50 hover:text-red-600 border border-gray-200">
+                    className="mt-4 px-5 py-2.5 rounded-xl bg-gray-100 text-gray-600 font-medium transition-all hover:bg-red-50 hover:text-red-600 hover:cursor-pointer border border-gray-200">
                     Clear all
                   </button>
                 </div>
@@ -164,7 +164,7 @@ function UploadPage() {
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Add a description (optional)"
                 rows={3}
-                className="w-full px-4 py-3.5 border border-gray-200 rounded-xl text-base bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100 transition-all resize-y min-h-[100px]"
+                className="w-full px-4 py-3.5 border border-gray-200 rounded-xl text-base bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100 transition-all resize-y min-h-25"
               />
             </div>
 
@@ -186,7 +186,7 @@ function UploadPage() {
 
             <button
               type="submit"
-              className="w-full px-4 py-4 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white rounded-xl text-base font-semibold shadow-lg shadow-purple-200 transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-purple-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+              className="w-full px-4 py-4 bg-linear-to-r from-indigo-500 via-purple-500 to-pink-500 text-white rounded-xl text-base font-semibold shadow-lg shadow-purple-200 transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-purple-300 hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
               disabled={isUploading || !selectedFiles.length}>
               {isUploading ? (
                 <span className="flex items-center justify-center gap-2">
