@@ -37,6 +37,27 @@ function GalleryPage() {
     );
   }, [sortedPhotos.length]);
 
+  async function sharePhoto(photo) {
+    const url = photo?.blobUrl;
+    const title = photo?.title || "Shared Photo";
+    const text = photo?.description || "Check out this photo on ShutterSaga";
+    if (!url) return;
+
+    try {
+      if (navigator.share) {
+        await navigator.share({ title, text, url });
+      } else if (navigator.clipboard) {
+        await navigator.clipboard.writeText(url);
+        alert("Link copied to clipboard");
+      } else {
+        // Fallback: open in new tab
+        window.open(url, "_blank");
+      }
+    } catch (e) {
+      // ignore cancellation
+    }
+  }
+
   const goToNext = useCallback(() => {
     setCurrentPhotoIndex((prev) =>
       prev === sortedPhotos.length - 1 ? 0 : prev + 1
@@ -231,7 +252,16 @@ function GalleryPage() {
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                 />
                 <div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 gap-3">
+                  <button
+                    type="button"
+                    className="px-3 py-1.5 rounded-full bg-white/90 text-gray-800 text-sm shadow hover:shadow-md hover:bg-white"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      sharePhoto(photo);
+                    }}>
+                    Share
+                  </button>
                   <span className="text-white text-2xl sm:text-3xl">🔍</span>
                 </div>
                 <button
@@ -263,7 +293,7 @@ function GalleryPage() {
       {/* Lightbox with navigation */}
       {currentPhoto && (
         <div
-          className="fixed inset-0 bg-linear-to-br from-black/95 to-[#1e143c]/95 flex items-center justify-center z-[1000] p-5"
+          className="fixed inset-0 bg-linear-to-br from-black/95 to-[#1e143c]/95 flex items-center justify-center z-50 p-5"
           onClick={closeLightbox}>
           {/* Header with controls */}
           <div className="absolute top-5 left-5 flex items-center gap-4 z-10">
@@ -293,7 +323,7 @@ function GalleryPage() {
           {/* Previous button */}
           {photos.length > 1 && (
             <button
-              className="absolute top-1/2 -translate-y-1/2 left-5 w-[50px] h-[50px] border-2 border-white/30 rounded-full bg-linear-to-br from-indigo-500/30 to-pink-400/20 text-white text-3xl cursor-pointer transition-all flex items-center justify-center z-10 backdrop-blur-md hover:from-indigo-500/50 hover:to-pink-400/40 hover:border-white/60 hover:scale-110"
+              className="absolute top-1/2 -translate-y-1/2 left-5 w-12 h-12 border-2 border-white/30 rounded-full bg-linear-to-br from-indigo-500/30 to-pink-400/20 text-white text-3xl cursor-pointer transition-all flex items-center justify-center z-10 backdrop-blur-md hover:from-indigo-500/50 hover:to-pink-400/40 hover:border-white/60 hover:scale-110"
               onClick={(e) => {
                 e.stopPropagation();
                 goToPrevious();
@@ -317,6 +347,14 @@ function GalleryPage() {
               {currentPhoto.description && (
                 <p className="mt-2 text-gray-300">{currentPhoto.description}</p>
               )}
+              <div className="mt-3">
+                <button
+                  type="button"
+                  className="px-4 py-2 rounded-full bg-white/90 text-gray-800 text-sm shadow hover:shadow-md hover:bg-white"
+                  onClick={() => sharePhoto(currentPhoto)}>
+                  Share Photo
+                </button>
+              </div>
               <span className="block mt-4 text-gray-500 text-sm">
                 {currentPhotoIndex + 1} / {photos.length}
               </span>
@@ -326,7 +364,7 @@ function GalleryPage() {
           {/* Next button */}
           {photos.length > 1 && (
             <button
-              className="absolute top-1/2 -translate-y-1/2 right-5 w-[50px] h-[50px] border-2 border-white/30 rounded-full bg-linear-to-br from-indigo-500/30 to-pink-400/20 text-white text-3xl cursor-pointer transition-all flex items-center justify-center z-10 backdrop-blur-md hover:from-indigo-500/50 hover:to-pink-400/40 hover:border-white/60 hover:scale-110"
+              className="absolute top-1/2 -translate-y-1/2 right-5 w-12 h-12 border-2 border-white/30 rounded-full bg-linear-to-br from-indigo-500/30 to-pink-400/20 text-white text-3xl cursor-pointer transition-all flex items-center justify-center z-10 backdrop-blur-md hover:from-indigo-500/50 hover:to-pink-400/40 hover:border-white/60 hover:scale-110"
               onClick={(e) => {
                 e.stopPropagation();
                 goToNext();
