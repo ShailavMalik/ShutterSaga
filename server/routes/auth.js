@@ -73,6 +73,7 @@ router.post("/register", async (req, res) => {
         id: user._id,
         username: user.username,
         email: user.email,
+        avatarUrl: user.avatarUrl,
       },
     });
   } catch (error) {
@@ -115,6 +116,7 @@ router.post("/login", async (req, res) => {
         id: user._id,
         username: user.username,
         email: user.email,
+        avatarUrl: user.avatarUrl,
       },
     });
   } catch (error) {
@@ -176,6 +178,7 @@ router.post("/google", async (req, res) => {
         id: user._id,
         username: user.username,
         email: user.email,
+        avatarUrl: user.avatarUrl,
       },
     });
   } catch (error) {
@@ -245,7 +248,7 @@ router.get("/storage-usage", authenticateToken, async (req, res) => {
     const usedBytes = agg?.[0]?.total || 0;
     const totalBytes = 1 * 1024 * 1024 * 1024; // 1GB
     res.json({ usedBytes, totalBytes });
-  } catch (_e) {
+  } catch (_E) {
     res.status(500).json({ usedBytes: 0, totalBytes: 1 * 1024 * 1024 * 1024 });
   }
 });

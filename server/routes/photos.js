@@ -113,7 +113,7 @@ router.get("/export", authenticateToken, async (req, res) => {
       "title description blobUrl size createdAt"
     );
     res.json({ photos });
-  } catch (_error) {
+  } catch (_Error) {
     res.status(500).json({ message: "Failed to load photos for export" });
   }
 });
