@@ -8,14 +8,8 @@ env:
 on:
   push:
     branches: ["main"]
-    paths:
-      - "client/**"
-      - ".github/workflows/frontend-cicd.yml"
   pull_request:
     branches: ["main"]
-    paths:
-      - "client/**"
-
 permissions:
   contents: read
   pull-requests: write
@@ -27,6 +21,19 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check if frontend changed
+        id: frontend_changed
+        run: |
+          git fetch origin main
+          MERGE_BASE=$(git merge-base origin/main HEAD)
+          if git diff --name-only "$MERGE_BASE" HEAD | grep '^client/'; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+          fi
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -36,19 +43,27 @@ jobs:
           cache-dependency-path: "client/package-lock.json"
 
       - name: Install dependencies
+        if: steps.frontend_changed.outputs.changed == 'true'
         working-directory: ./${{ env.APP_LOCATION }}
         run: npm install
 
       - name: Run ESlint
+        if: steps.frontend_changed.outputs.changed == 'true'
         working-directory: ./${{ env.APP_LOCATION }}
         run: npm run lint --if-present
 
       - name: Run tests
+        if: steps.frontend_changed.outputs.changed == 'true'
         working-directory: ./${{env.APP_LOCATION}}
         run: npm test --if-present
 
       - name: Build App
+        if: steps.frontend_changed.outputs.changed == 'true'
         working-directory: ./${{ env.APP_LOCATION }}
         run: npm run build
+
+      - name: Skip (no frontend changes)
+        if: steps.frontend_changed.outputs.changed == 'false'
+        run: echo "No frontend changes detected; skipping client CI steps."
 
   # Deployment is handled automatically by Vercel using its GitHub integration.
