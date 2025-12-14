@@ -2,11 +2,11 @@ services:
   - type: web
     name: shuttersaga-backend
     env: node
-    region: oregon
     plan: starter
+    # Force commands to run inside server to avoid picking the root package.json build script.
     rootDir: server
-    buildCommand: npm install
-    startCommand: npm run start:prod
+    buildCommand: cd server && npm ci
+    startCommand: cd server && npm run start:prod
     envVars:
       - key: NODE_ENV
         value: production
