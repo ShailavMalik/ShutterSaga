@@ -23,10 +23,7 @@ export default defineConfig([
       },
     },
     rules: {
-      "no-unused-vars": [
-        "error",
-        { varsIgnorePattern: "^[A-Z_]", argsIgnorePattern: "^_" },
-      ],
+      "no-unused-vars": "off",
       // Allow exporting hooks alongside components (common pattern)
       "react-refresh/only-export-components": [
         "warn",

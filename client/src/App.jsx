@@ -5,7 +5,7 @@ import {
   Navigate,
   useLocation,
 } from "react-router-dom";
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/shared/ProtectedRoute";
 import Navbar from "./components/shared/Navbar";
