@@ -19,7 +19,7 @@ export function setupRoutes(app, authLimiter) {
   app.use(express.static(clientDistPath, { maxAge: "1d" }));
 
   // SPA fallback: serve index.html for all non-API routes
-  app.get("*", (req, res) => {
+  app.use((req, res) => {
     res.sendFile(path.join(clientDistPath, "index.html"));
   });
 }
