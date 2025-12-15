@@ -160,6 +160,99 @@ router.get("/:id", authenticateToken, async (req, res) => {
 });
 
 /**
+ * POST /api/photos/:id/edit
+ * Update a photo with edited version
+ */
+router.post(
+  "/:id/edit",
+  authenticateToken,
+  upload.single("photo"),
+  async (req, res) => {
+    try {
+      const photo = await Photo.findOne({
+        _id: req.params.id,
+        user: req.user._id,
+      });
+
+      if (!photo) {
+        return res.status(404).json({ message: "Photo not found" });
+      }
+
+      if (!req.file) {
+        return res.status(400).json({ message: "No image provided" });
+      }
+
+      // Delete old blob from Azure
+      await deleteFromAzure(photo.blobName);
+
+      // Upload new edited image
+      const newBlobName = generateUniqueBlobName(
+        `edited-${photo.title || "photo"}.jpg`,
+        req.user.username
+      );
+      const newBlobUrl = await uploadToAzure(req.file, newBlobName);
+
+      // Update photo record
+      photo.blobUrl = newBlobUrl;
+      photo.blobName = newBlobName;
+      photo.contentType = req.file.mimetype;
+      photo.size = req.file.size;
+      await photo.save();
+
+      res.json({
+        message: "Photo updated successfully",
+        photo: {
+          id: photo._id,
+          title: photo.title,
+          description: photo.description,
+          blobUrl: photo.blobUrl,
+          createdAt: photo.createdAt,
+        },
+      });
+    } catch (error) {
+      console.error("Edit photo error:", error);
+      res.status(500).json({ message: "Failed to update photo" });
+    }
+  }
+);
+
+/**
+ * GET /api/photos/:id/proxy
+ * Proxy endpoint to fetch image from Azure (bypasses CORS)
+ */
+router.get("/:id/proxy", authenticateToken, async (req, res) => {
+  try {
+    const photo = await Photo.findOne({
+      _id: req.params.id,
+      user: req.user._id,
+    });
+
+    if (!photo) {
+      return res.status(404).json({ message: "Photo not found" });
+    }
+
+    // Fetch image from Azure
+    const response = await fetch(photo.blobUrl);
+    if (!response.ok) {
+      throw new Error("Failed to fetch image from storage");
+    }
+
+    const buffer = await response.arrayBuffer();
+
+    // Set appropriate headers
+    res.setHeader("Content-Type", photo.contentType || "image/jpeg");
+    // Cache for 7 days to reduce Azure bandwidth costs
+    res.setHeader("Cache-Control", "public, max-age=604800");
+    res.setHeader("ETag", `"${photo._id}"`);
+
+    res.send(Buffer.from(buffer));
+  } catch (error) {
+    console.error("Proxy fetch error:", error);
+    res.status(500).json({ message: "Could not fetch image" });
+  }
+});
+
+/**
  * DELETE /api/photos/:id
  * Delete a photo from both Azure and MongoDB
  */

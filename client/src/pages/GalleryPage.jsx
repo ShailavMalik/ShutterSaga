@@ -5,13 +5,14 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { photosAPI } from "../services/api";
+import QuickEditor from "../components/editor/QuickEditor";
 
 function GalleryPage() {
   // Photos data
-  const [photos, setPhotos] = useState([]); // Removed comments for clarity
+  const [photos, setPhotos] = useState([]);
 
   // UI states
-  const [isLoading, setIsLoading] = useState(true); // Removed comments for clarity
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
 
   // Lightbox state - store index instead of photo object for easier navigation
@@ -19,6 +20,7 @@ function GalleryPage() {
   const [deletingId, setDeletingId] = useState(null);
   const [sortBy, setSortBy] = useState("newest");
   const [isSlideshow, setIsSlideshow] = useState(false);
+  const [editingPhoto, setEditingPhoto] = useState(null);
 
   const sortedPhotos = useMemo(() => {
     return [...photos].sort((a, b) => {
@@ -255,12 +257,21 @@ function GalleryPage() {
                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 gap-3">
                   <button
                     type="button"
-                    className="px-3 py-1.5 rounded-full bg-white/90 text-gray-800 text-sm shadow hover:shadow-md hover:bg-white"
+                    className="px-3 py-1.5 rounded-full bg-white/90 text-gray-800 text-sm shadow hover:shadow-md hover:bg-white cursor-pointer transition-colors"
                     onClick={(e) => {
                       e.stopPropagation();
                       sharePhoto(photo);
                     }}>
                     Share
+                  </button>
+                  <button
+                    type="button"
+                    className="px-3 py-1.5 rounded-full bg-blue-500/90 text-white text-sm shadow hover:shadow-md hover:bg-blue-600 cursor-pointer transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setEditingPhoto(photo);
+                    }}>
+                    Edit
                   </button>
                   <span className="text-white text-2xl sm:text-3xl">🔍</span>
                 </div>
@@ -347,12 +358,18 @@ function GalleryPage() {
               {currentPhoto.description && (
                 <p className="mt-2 text-gray-300">{currentPhoto.description}</p>
               )}
-              <div className="mt-3">
+              <div className="mt-3 flex flex-col sm:flex-row gap-2 sm:gap-3 justify-center">
                 <button
                   type="button"
-                  className="px-4 py-2 rounded-full bg-white/90 text-gray-800 text-sm shadow hover:shadow-md hover:bg-white"
+                  className="px-4 py-2 rounded-full bg-white/90 text-gray-800 text-sm shadow hover:shadow-md hover:bg-white cursor-pointer transition-colors"
                   onClick={() => sharePhoto(currentPhoto)}>
                   Share Photo
+                </button>
+                <button
+                  type="button"
+                  className="px-4 py-2 rounded-full bg-blue-500/90 text-white text-sm shadow hover:shadow-md hover:bg-blue-600 cursor-pointer transition-colors"
+                  onClick={() => setEditingPhoto(currentPhoto)}>
+                  ✏️ Edit
                 </button>
               </div>
               <span className="block mt-4 text-gray-500 text-sm">
@@ -374,6 +391,49 @@ function GalleryPage() {
             </button>
           )}
         </div>
+      )}
+
+      {/* Quick Editor Modal */}
+      {editingPhoto && (
+        <QuickEditor
+          imageSrc={editingPhoto.blobUrl}
+          photoId={editingPhoto._id}
+          onClose={() => setEditingPhoto(null)}
+          onApply={async (blob) => {
+            try {
+              const formData = new FormData();
+              formData.append(
+                "photo",
+                blob,
+                `edited-${editingPhoto.title || "photo"}.jpg`
+              );
+
+              const response = await photosAPI.updatePhoto(
+                editingPhoto._id,
+                formData
+              );
+
+              // Update local state immediately with new photo URL to avoid cache issues
+              const updatedPhoto = response.data.photo;
+              setPhotos((prev) =>
+                prev.map((p) =>
+                  p._id === updatedPhoto.id
+                    ? {
+                        ...p,
+                        blobUrl: updatedPhoto.blobUrl,
+                        size: updatedPhoto.size,
+                      }
+                    : p
+                )
+              );
+
+              setEditingPhoto(null);
+            } catch (error) {
+              console.error("Failed to save edited photo:", error);
+              alert("Failed to save edited photo. Please try again.");
+            }
+          }}
+        />
       )}
     </div>
   );

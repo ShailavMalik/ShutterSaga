@@ -1,0 +1,30 @@
+/* PhotoEditor Styles */
+
+.react-easy-crop_Container {
+    background: #f3f4f6;
+    border-radius: 8px;
+}
+
+.react-easy-crop_Image {
+    object-fit: contain;
+}
+
+.react-easy-crop_CropArea {
+    border: 2px solid #4f46e5;
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.3);
+}
+
+/* Canvas annotation styles */
+canvas {
+    display: block;
+    margin: 0 auto;
+}
+
+/* Grid overlay for crop */
+.react-easy-crop_GridContainer::before,
+.react-easy-crop_GridContainer::after {
+    background-image:
+        linear-gradient(0deg, transparent 24%, rgba(79, 70, 229, 0.1) 25%, rgba(79, 70, 229, 0.1) 26%, transparent 27%, transparent 74%, rgba(79, 70, 229, 0.1) 75%, rgba(79, 70, 229, 0.1) 76%, transparent 77%, transparent),
+        linear-gradient(90deg, transparent 24%, rgba(79, 70, 229, 0.1) 25%, rgba(79, 70, 229, 0.1) 26%, transparent 27%, transparent 74%, rgba(79, 70, 229, 0.1) 75%, rgba(79, 70, 229, 0.1) 76%, transparent 77%, transparent);
+    background-size: 50px 50px;
+}

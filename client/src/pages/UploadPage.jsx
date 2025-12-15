@@ -1,14 +1,17 @@
 import { useState } from "react";
 import { photosAPI } from "../services/api";
+import PhotoEditor from "../components/editor/PhotoEditor";
 
 function UploadPage() {
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [previews, setPreviews] = useState([]);
+  const [editedFiles, setEditedFiles] = useState({});
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [defaultCaption, setDefaultCaption] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
+  const [editingIndex, setEditingIndex] = useState(null);
 
   function handleFileSelect(e) {
     const files = Array.from(e.target.files || []);
@@ -21,6 +24,38 @@ function UploadPage() {
   function clearSelectedFile() {
     setSelectedFiles([]);
     setPreviews([]);
+    setEditedFiles({});
+  }
+
+  function handleEditPhoto(index) {
+    setEditingIndex(index);
+  }
+
+  function handleSaveEdit(editedBlob) {
+    if (editedBlob instanceof Blob) {
+      // Convert blob to a file
+      const editedFile = new File([editedBlob], `edited-${editingIndex}.jpg`, {
+        type: "image/jpeg",
+      });
+
+      const newFiles = [...selectedFiles];
+      newFiles[editingIndex] = editedFile;
+      setSelectedFiles(newFiles);
+
+      // Store edited file and update preview
+      const newEdited = { ...editedFiles };
+      newEdited[editingIndex] = editedFile;
+      setEditedFiles(newEdited);
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const newPreviews = [...previews];
+        newPreviews[editingIndex] = e.target.result;
+        setPreviews(newPreviews);
+      };
+      reader.readAsDataURL(editedFile);
+    }
+    setEditingIndex(null);
   }
 
   async function handleSubmit(e) {
@@ -96,12 +131,19 @@ function UploadPage() {
                 <div>
                   <div className="grid grid-cols-3 gap-3">
                     {previews.map((src, idx) => (
-                      <img
-                        key={idx}
-                        src={src}
-                        alt={`Preview ${idx + 1}`}
-                        className="w-full h-24 object-cover rounded-xl border border-gray-200 shadow-md"
-                      />
+                      <div key={idx} className="relative group">
+                        <img
+                          src={src}
+                          alt={`Preview ${idx + 1}`}
+                          className="w-full h-24 object-cover rounded-xl border border-gray-200 shadow-md"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleEditPhoto(idx)}
+                          className="absolute inset-0 bg-black/0 group-hover:bg-black/40 rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all">
+                          <span className="text-white text-2xl">✏️ Edit</span>
+                        </button>
+                      </div>
                     ))}
                   </div>
                   <button
@@ -200,6 +242,14 @@ function UploadPage() {
           </form>
         </div>
       </div>
+
+      {editingIndex !== null && (
+        <PhotoEditor
+          imageSrc={previews[editingIndex]}
+          onSave={handleSaveEdit}
+          onCancel={() => setEditingIndex(null)}
+        />
+      )}
     </div>
   );
 }

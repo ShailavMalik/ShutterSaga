@@ -36,23 +36,55 @@ function Contributor({ initials, name, role, link }) {
       href={link}
       target="_blank"
       rel="noreferrer"
-      className="group relative overflow-hidden rounded-2xl border border-indigo-100/70 bg-white/90 backdrop-blur-xl p-5 sm:p-6 shadow-[0_10px_40px_rgba(31,41,55,0.08)] transition-all hover:-translate-y-0.5 hover:shadow-[0_18px_56px_rgba(99,102,241,0.25)]">
-      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-[radial-gradient(600px_circle_at_var(--x,50%)_var(--y,50%),rgba(99,102,241,0.08),transparent_40%)] pointer-events-none" />
-      <div className="flex items-center gap-4">
-        <div className="p-0.5 rounded-full bg-linear-to-br from-indigo-500 to-pink-500">
-          <div className="w-14 h-14 rounded-full grid place-items-center text-white font-semibold bg-linear-to-br from-indigo-500 to-purple-600">
-            {initials}
+      className="group relative overflow-hidden rounded-2xl border border-indigo-100/70 bg-white backdrop-blur-xl p-6 sm:p-8 shadow-[0_10px_40px_rgba(31,41,55,0.08)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_60px_rgba(99,102,241,0.3)] hover:border-indigo-200">
+      {/* Animated gradient background on hover */}
+      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-linear-to-br from-indigo-50 via-purple-50 to-pink-50" />
+
+      {/* Shimmer effect */}
+      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700">
+        <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+      </div>
+
+      <div className="relative flex flex-col items-center text-center gap-4">
+        {/* Avatar with animated gradient border */}
+        <div className="relative">
+          <div
+            className="absolute inset-0 rounded-full bg-linear-to-br from-indigo-400 via-purple-500 to-pink-500 animate-spin-slow opacity-75 blur-sm group-hover:opacity-100"
+            style={{ animationDuration: "3s" }}
+          />
+          <div className="relative p-1 rounded-full bg-linear-to-br from-indigo-500 via-purple-500 to-pink-500">
+            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full grid place-items-center text-white font-bold text-2xl sm:text-3xl bg-linear-to-br from-indigo-600 to-purple-600 shadow-lg group-hover:shadow-xl transition-shadow">
+              {initials}
+            </div>
           </div>
         </div>
-        <div className="min-w-0">
-          <div className="font-semibold text-gray-900 truncate">{name}</div>
-          <div className="text-sm text-gray-600">{role}</div>
-          <div className="mt-2 inline-flex items-center gap-2 text-indigo-600 text-sm">
-            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full border border-indigo-200/70 bg-indigo-50/60 group-hover:bg-indigo-50">
-              <LinkedInIcon />
-              <span className="font-medium">LinkedIn</span>
-            </span>
+
+        {/* Name and role */}
+        <div className="space-y-1">
+          <div className="font-bold text-lg sm:text-xl text-gray-900 group-hover:text-indigo-700 transition-colors">
+            {name}
           </div>
+          <div className="text-sm sm:text-base text-gray-600 font-medium">
+            {role}
+          </div>
+        </div>
+
+        {/* LinkedIn button with enhanced styling */}
+        <div className="mt-2 inline-flex items-center gap-2 px-4 py-2 rounded-full border-2 border-indigo-200 bg-linear-to-r from-indigo-50 to-purple-50 text-indigo-700 text-sm font-semibold shadow-sm group-hover:border-indigo-400 group-hover:shadow-md group-hover:scale-105 transition-all duration-300">
+          <LinkedInIcon className="w-5 h-5" />
+          <span>Connect on LinkedIn</span>
+          <svg
+            className="w-4 h-4 transform group-hover:translate-x-1 transition-transform"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 5l7 7-7 7"
+            />
+          </svg>
         </div>
       </div>
     </a>
@@ -101,14 +133,17 @@ function AboutPage() {
         </div>
 
         {/* Contributors - separate highlighted section */}
-        <section className="mt-8 sm:mt-12 rounded-3xl border border-indigo-100/60 bg-linear-to-br from-indigo-50 via-purple-50 to-white p-5 sm:p-8 shadow-[0_12px_48px_rgba(99,102,241,0.12)]">
-          <div className="flex items-center justify-between flex-wrap gap-3">
-            <h2 className="text-2xl font-bold text-gray-900">Contributors</h2>
-            <p className="text-gray-600 text-sm max-w-xl">
-              Core team behind ShutterSaga. Hover to explore and connect.
+        <section className="mt-8 sm:mt-12 rounded-3xl border-2 border-indigo-200/50 bg-linear-to-br from-indigo-50/80 via-purple-50/60 to-pink-50/40 p-6 sm:p-10 shadow-[0_12px_48px_rgba(99,102,241,0.15)]">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl sm:text-4xl font-extrabold bg-linear-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-3">
+              Meet the Team
+            </h2>
+            <p className="text-gray-600 text-base sm:text-lg max-w-2xl mx-auto">
+              The creative minds behind ShutterSaga. Connect with us on
+              LinkedIn!
             </p>
           </div>
-          <div className="mt-5 grid gap-5 sm:grid-cols-2">
+          <div className="mt-8 grid gap-6 sm:grid-cols-2 max-w-4xl mx-auto">
             <Contributor
               initials="SM"
               name="Shailav Malik"

@@ -127,6 +127,18 @@ export const photosAPI = {
 
   // Delete a photo
   delete: (id) => api.delete(`/photos/${id}`),
+
+  // Update/edit a photo
+  updatePhoto: (id, formData) =>
+    api.post(`/photos/${id}/edit`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    }),
+
+  // Proxy endpoint to fetch image (bypasses CORS)
+  getImageProxy: (id) =>
+    api.get(`/photos/${id}/proxy`, {
+      responseType: "blob",
+    }),
 };
 
 export default api;
