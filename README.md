@@ -13,9 +13,12 @@ A modern photo gallery application with secure authentication and Azure Blob Sto
 - ☁️ **Cloud Storage** - Photos stored in Azure Blob Storage (organized by user)
 - 🖼️ **Gallery View** - Beautiful grid layout with lightbox preview
 - 🎯 **Photo Navigation** - Keyboard and button navigation in lightbox
+- ✂️ **Quick Editor** - Crop (with grid + zoom), draw/annotate, and apply filters (brightness/contrast/saturation) with reset-to-original, view zoom, and a save success confirmation
 - 📱 **Responsive Design** - Works great on desktop and mobile
 - 🛡️ **Production Ready** - Rate limiting, CORS, security headers
 - 📁 **User Directories** - Each user's photos stored in their own folder
+- 🔗 **Easy Sharing** - Share from the grid or the lightbox
+- 🎞️ **Slideshow** - Toggle slideshow in lightbox (Space key)
 
 ## Tech Stack
 
@@ -33,7 +36,26 @@ A modern photo gallery application with secure authentication and Azure Blob Sto
 - **Framework**: React 19
 - **Routing**: React Router DOM 7
 - **HTTP Client**: Axios
+- **Styling**: Tailwind CSS 3
+- **Image Editing**: react-easy-crop + HTML5 Canvas 2D API
 - **Build Tool**: Vite 7
+
+## Quick Editor
+
+The in-browser editor lets you perform fast, non-destructive edits before saving:
+
+- **Crop**: drag to select, zoom the image, optional grid overlay
+- **Draw & Annotate**: freehand brush with color/size, add text, clear
+- **Filters**: brightness/contrast/saturation with live preview, plus "Reset to Original"
+- **View Zoom**: zoom the preview (0.5x–3x) in Annotate and Filters for precise control
+- **Save Confirmation**: visible "Image saved successfully" notice after a successful save
+
+How to use:
+
+1. Hover a photo and click **Edit** (or open the lightbox and choose **Edit**).
+2. Switch between tabs: Crop, Draw & Annotate, Filters.
+3. Click **Save Crop** or **Save Changes** to persist your edits.
+4. The gallery updates immediately after saving.
 
 ## Quick Start
 

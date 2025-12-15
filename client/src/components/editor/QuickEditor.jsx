@@ -13,6 +13,7 @@ function QuickEditor({ imageSrc, photoId, onClose, onApply }) {
   const [brightness, setBrightness] = useState(100);
   const [contrast, setContrast] = useState(100);
   const [saturation, setSaturation] = useState(100);
+  const [viewZoom, setViewZoom] = useState(1);
 
   // Crop states
   const [crop, setCrop] = useState({ x: 0, y: 0 });
@@ -23,6 +24,7 @@ function QuickEditor({ imageSrc, photoId, onClose, onApply }) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
+  const [showSaved, setShowSaved] = useState(false);
 
   // Fetch image via proxy to avoid CORS issues
   useEffect(() => {
@@ -322,6 +324,18 @@ function QuickEditor({ imageSrc, photoId, onClose, onApply }) {
     img.src = displayImage;
   };
 
+  const resetFilters = () => {
+    setBrightness(100);
+    setContrast(100);
+    setSaturation(100);
+    initializeFilterCanvas();
+  };
+
+  const notifySaved = () => {
+    setShowSaved(true);
+    setTimeout(() => setShowSaved(false), 1600);
+  };
+
   const handleSave = async () => {
     // If on crop tab, create cropped image directly
     if (activeTab === "crop") {
@@ -337,7 +351,8 @@ function QuickEditor({ imageSrc, photoId, onClose, onApply }) {
           const response = await fetch(croppedUrl);
           const blob = await response.blob();
           URL.revokeObjectURL(croppedUrl);
-          onApply(blob);
+          await Promise.resolve(onApply(blob));
+          notifySaved();
         }
       } catch (error) {
         console.error("Save failed:", error);
@@ -357,9 +372,15 @@ function QuickEditor({ imageSrc, photoId, onClose, onApply }) {
     }
 
     canvas.toBlob(
-      (blob) => {
+      async (blob) => {
         if (blob) {
-          onApply(blob);
+          try {
+            await Promise.resolve(onApply(blob));
+            notifySaved();
+          } catch (err) {
+            console.error("Save failed:", err);
+            alert("Failed to save image");
+          }
         } else {
           alert("Failed to save image");
         }
@@ -400,11 +421,23 @@ function QuickEditor({ imageSrc, photoId, onClose, onApply }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl sm:max-w-3xl max-h-[95vh] sm:max-h-[90vh] flex flex-col">
+    <div className="fixed inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(79,70,229,0.18),transparent_25%),radial-gradient(circle_at_80%_30%,rgba(236,72,153,0.16),transparent_25%)] bg-black/60 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50">
+      <div className="bg-white/95 backdrop-blur-xl border border-gray-200/80 rounded-2xl shadow-[0_20px_70px_rgba(0,0,0,0.18)] w-full max-w-2xl sm:max-w-3xl max-h-[95vh] sm:max-h-[90vh] flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="border-b p-3 sm:p-4 flex justify-between items-center gap-2">
-          <h2 className="text-lg sm:text-xl font-bold truncate">Quick Edit</h2>
+        <div className="border-b border-gray-200/80 p-3 sm:p-4 flex justify-between items-center gap-2 bg-linear-to-r from-white via-white to-indigo-50/40">
+          <div className="flex items-center gap-2">
+            <div className="h-9 w-9 rounded-full bg-indigo-100 text-indigo-700 grid place-items-center font-semibold">
+              QE
+            </div>
+            <div>
+              <h2 className="text-lg sm:text-xl font-bold leading-tight">
+                Quick Edit
+              </h2>
+              <p className="text-xs text-gray-500">
+                Crop, annotate, and enhance your photo
+              </p>
+            </div>
+          </div>
           <button
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700 text-xl sm:text-2xl shrink-0">
@@ -445,6 +478,17 @@ function QuickEditor({ imageSrc, photoId, onClose, onApply }) {
 
         {/* Content */}
         <div className="flex-1 overflow-auto p-3 sm:p-6">
+          {showSaved && (
+            <div className="mb-3 w-full animate-fade-in">
+              <div className="flex items-center gap-2 rounded-xl border border-green-200 bg-linear-to-r from-green-50 to-emerald-50 px-3 py-2 text-sm text-green-700 shadow-sm">
+                <span role="img" aria-label="success">
+                  ✅
+                </span>
+                <span>Image saved successfully.</span>
+              </div>
+            </div>
+          )}
+
           {activeTab === "crop" && localImageUrl && (
             <div className="space-y-4">
               <div className="relative w-full h-64 sm:h-80 md:h-96 bg-gray-100 rounded-lg overflow-hidden">
@@ -481,7 +525,7 @@ function QuickEditor({ imageSrc, photoId, onClose, onApply }) {
 
           {activeTab === "annotate" && displayImage && (
             <div className="space-y-4">
-              <div className="border-2 border-gray-300 rounded-lg overflow-hidden bg-gray-100">
+              <div className="qe-canvas-wrap">
                 <canvas
                   ref={canvasRef}
                   onMouseDown={handleCanvasMouseDown}
@@ -494,8 +538,25 @@ function QuickEditor({ imageSrc, photoId, onClose, onApply }) {
                   className="qe-canvas cursor-crosshair"
                   style={{
                     maxHeight: "420px",
+                    transform: `scale(${viewZoom})`,
+                    transformOrigin: "top left",
                     touchAction: "none",
                   }}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  View Zoom ({viewZoom.toFixed(1)}x)
+                </label>
+                <input
+                  type="range"
+                  value={viewZoom}
+                  onChange={(e) => setViewZoom(parseFloat(e.target.value))}
+                  min={0.5}
+                  max={3}
+                  step={0.1}
+                  className="w-full"
                 />
               </div>
 
@@ -545,14 +606,31 @@ function QuickEditor({ imageSrc, photoId, onClose, onApply }) {
           {activeTab === "filters" && displayImage && (
             <div className="space-y-6">
               {/* Canvas for filter preview */}
-              <div className="border-2 border-gray-300 rounded-lg overflow-hidden bg-gray-100">
+              <div className="qe-canvas-wrap">
                 <canvas
                   ref={filterCanvasRef}
                   className="qe-canvas"
                   style={{
                     maxHeight: "360px",
+                    transform: `scale(${viewZoom})`,
+                    transformOrigin: "top left",
                     touchAction: "none",
                   }}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  View Zoom ({viewZoom.toFixed(1)}x)
+                </label>
+                <input
+                  type="range"
+                  value={viewZoom}
+                  onChange={(e) => setViewZoom(parseFloat(e.target.value))}
+                  min={0.5}
+                  max={3}
+                  step={0.1}
+                  className="w-full"
                 />
               </div>
 
@@ -598,11 +676,18 @@ function QuickEditor({ imageSrc, photoId, onClose, onApply }) {
                 />
               </div>
 
-              <button
-                onClick={applyFilters}
-                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-lg font-medium transition-colors">
-                Apply Filters
-              </button>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={resetFilters}
+                  className="flex-1 border border-gray-300 hover:border-gray-400 text-gray-800 py-2 rounded-lg font-medium transition-colors bg-white">
+                  Reset to Original
+                </button>
+                <button
+                  onClick={applyFilters}
+                  className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-lg font-medium transition-colors">
+                  Apply Filters
+                </button>
+              </div>
             </div>
           )}
         </div>

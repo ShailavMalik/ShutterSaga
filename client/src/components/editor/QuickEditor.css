@@ -11,3 +11,12 @@
 .qe-canvas:hover {
     opacity: 0.98;
 }
+
+.qe-canvas-wrap {
+    border: 2px solid #e5e7eb;
+    border-radius: 0.75rem;
+    background: #f8fafc;
+    overflow: auto;
+    padding: 0.5rem;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
