@@ -4,8 +4,8 @@ A modern photo gallery application with secure authentication and Azure Blob Sto
 
 ## 🌐 Live Demo
 
-- **Frontend**: [https://shuttersaga.shailavmalik.me](https://shuttersaga.shailavmalik.me)
-- **Backend API**: [https://shuttersaga-backend-eqfegxebavdwdqgf.centralindia-01.azurewebsites.net](https://shuttersaga-backend-eqfegxebavdwdqgf.centralindia-01.azurewebsites.net)
+ [https://shuttersaga.shailavmalik.me](https://shuttersaga.shailavmalik.me)
+
 
 ## Features
 
