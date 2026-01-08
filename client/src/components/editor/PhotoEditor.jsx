@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import ReactEasyCrop from "react-easy-crop";
 import "./PhotoEditor.css";
 
@@ -8,6 +8,11 @@ function PhotoEditor({ imageSrc, onSave, onCancel }) {
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
   const [activeTab, setActiveTab] = useState("crop"); // crop, annotate
   const [isSaving, setIsSaving] = useState(false);
+  const [imageDimensions, setImageDimensions] = useState({
+    width: 0,
+    height: 0,
+  });
+  const [aspect, setAspect] = useState(4 / 3); // Default aspect ratio
 
   // Annotation states
   const canvasRef = useRef(null);
@@ -17,57 +22,116 @@ function PhotoEditor({ imageSrc, onSave, onCancel }) {
   const [annotatedImage, setAnnotatedImage] = useState(imageSrc);
   const [showAnnotationCanvas, setShowAnnotationCanvas] = useState(false);
 
+  // Load image dimensions and set natural aspect ratio
+  useEffect(() => {
+    const img = new Image();
+    img.onload = () => {
+      setImageDimensions({ width: img.width, height: img.height });
+      // Set initial aspect ratio based on image's natural dimensions
+      setAspect(img.width / img.height);
+    };
+    img.src = imageSrc;
+  }, [imageSrc]);
+
   const onCropComplete = useCallback((croppedArea, croppedAreaPixels) => {
     setCroppedAreaPixels(croppedAreaPixels);
   }, []);
 
   // Create canvas image from blob for cropping
-  const createCroppedImage = async (imageSrc, crop) => {
-    const image = new Image();
-    image.src = imageSrc;
+  const createCroppedImage = async (imageSrc, pixelCrop) => {
+    return new Promise((resolve, reject) => {
+      const image = new Image();
+      image.crossOrigin = "anonymous";
 
-    return new Promise((resolve) => {
       image.onload = () => {
         const canvas = document.createElement("canvas");
         const ctx = canvas.getContext("2d");
 
-        canvas.width = croppedAreaPixels.width;
-        canvas.height = croppedAreaPixels.height;
+        if (!pixelCrop) {
+          reject(new Error("No crop area defined"));
+          return;
+        }
+
+        canvas.width = pixelCrop.width;
+        canvas.height = pixelCrop.height;
 
         ctx.drawImage(
           image,
-          croppedAreaPixels.x,
-          croppedAreaPixels.y,
-          croppedAreaPixels.width,
-          croppedAreaPixels.height,
+          pixelCrop.x,
+          pixelCrop.y,
+          pixelCrop.width,
+          pixelCrop.height,
           0,
           0,
-          croppedAreaPixels.width,
-          croppedAreaPixels.height
+          pixelCrop.width,
+          pixelCrop.height
         );
 
-        canvas.toBlob((blob) => {
-          const url = URL.createObjectURL(blob);
-          resolve({ blob, url });
-        }, "image/jpeg");
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              const url = URL.createObjectURL(blob);
+              resolve({ blob, url });
+            } else {
+              reject(new Error("Failed to create blob"));
+            }
+          },
+          "image/jpeg",
+          0.95
+        );
       };
+
+      image.onerror = () => {
+        reject(new Error("Failed to load image"));
+      };
+
+      image.src = imageSrc;
     });
   };
 
   const handleCropApply = async () => {
+    if (!croppedAreaPixels) {
+      console.error("No crop area defined");
+      return;
+    }
+
     setIsSaving(true);
     try {
       const { blob, url } = await createCroppedImage(
         imageSrc,
         croppedAreaPixels
       );
-      setAnnotatedImage(url);
-      setActiveTab("annotate");
-      setShowAnnotationCanvas(true);
+
       // Store blob for later use
       window.editedImageBlob = blob;
+      setAnnotatedImage(url);
+      setShowAnnotationCanvas(true);
+      setActiveTab("annotate");
+
+      // Initialize canvas with the cropped image after state updates
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          const canvas = canvasRef.current;
+          if (canvas) {
+            const ctx = canvas.getContext("2d");
+            const img = new Image();
+            img.crossOrigin = "anonymous";
+            img.onload = () => {
+              canvas.width = img.width;
+              canvas.height = img.height;
+              ctx.clearRect(0, 0, canvas.width, canvas.height);
+              ctx.drawImage(img, 0, 0);
+            };
+            img.onerror = (err) => {
+              console.error("Failed to load cropped image for canvas:", err);
+            };
+            img.src = url;
+          }
+        }, 50);
+      });
     } catch (error) {
       console.error("Cropping failed:", error);
+      alert("Failed to crop the image. Please try again.");
     } finally {
       setIsSaving(false);
     }
@@ -110,17 +174,18 @@ function PhotoEditor({ imageSrc, onSave, onCancel }) {
     setIsDrawing(false);
   };
 
-  const initializeAnnotationCanvas = (e) => {
+  const initializeAnnotationCanvas = () => {
     const canvas = canvasRef.current;
-    if (!canvas || !e.target) return;
+    if (!canvas || !annotatedImage) return;
 
     const ctx = canvas.getContext("2d");
     const img = new Image();
-    img.src = e.target.src;
+    img.src = annotatedImage;
 
     img.onload = () => {
       canvas.width = img.width;
       canvas.height = img.height;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(img, 0, 0);
     };
   };
@@ -216,15 +281,100 @@ function PhotoEditor({ imageSrc, onSave, onCancel }) {
                   image={imageSrc}
                   crop={crop}
                   zoom={zoom}
-                  aspect={4 / 3}
+                  aspect={aspect}
                   onCropChange={setCrop}
                   onCropComplete={onCropComplete}
                   onZoomChange={setZoom}
                   showGrid={true}
+                  objectFit="contain"
                 />
               </div>
 
               <div className="mt-6 space-y-4">
+                {/* Aspect Ratio Selection */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Aspect Ratio
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setAspect(undefined)}
+                      className={`px-3 py-1 text-sm rounded-lg border transition-colors ${
+                        aspect === undefined
+                          ? "bg-indigo-600 text-white border-indigo-600"
+                          : "border-gray-300 hover:border-indigo-400"
+                      }`}>
+                      Free
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setAspect(
+                          imageDimensions.width / imageDimensions.height
+                        )
+                      }
+                      className={`px-3 py-1 text-sm rounded-lg border transition-colors ${
+                        aspect ===
+                        imageDimensions.width / imageDimensions.height
+                          ? "bg-indigo-600 text-white border-indigo-600"
+                          : "border-gray-300 hover:border-indigo-400"
+                      }`}>
+                      Original
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setAspect(1)}
+                      className={`px-3 py-1 text-sm rounded-lg border transition-colors ${
+                        aspect === 1
+                          ? "bg-indigo-600 text-white border-indigo-600"
+                          : "border-gray-300 hover:border-indigo-400"
+                      }`}>
+                      1:1
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setAspect(4 / 3)}
+                      className={`px-3 py-1 text-sm rounded-lg border transition-colors ${
+                        aspect === 4 / 3
+                          ? "bg-indigo-600 text-white border-indigo-600"
+                          : "border-gray-300 hover:border-indigo-400"
+                      }`}>
+                      4:3
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setAspect(16 / 9)}
+                      className={`px-3 py-1 text-sm rounded-lg border transition-colors ${
+                        aspect === 16 / 9
+                          ? "bg-indigo-600 text-white border-indigo-600"
+                          : "border-gray-300 hover:border-indigo-400"
+                      }`}>
+                      16:9
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setAspect(3 / 4)}
+                      className={`px-3 py-1 text-sm rounded-lg border transition-colors ${
+                        aspect === 3 / 4
+                          ? "bg-indigo-600 text-white border-indigo-600"
+                          : "border-gray-300 hover:border-indigo-400"
+                      }`}>
+                      3:4
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setAspect(9 / 16)}
+                      className={`px-3 py-1 text-sm rounded-lg border transition-colors ${
+                        aspect === 9 / 16
+                          ? "bg-indigo-600 text-white border-indigo-600"
+                          : "border-gray-300 hover:border-indigo-400"
+                      }`}>
+                      9:16
+                    </button>
+                  </div>
+                </div>
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Zoom
@@ -319,7 +469,7 @@ function PhotoEditor({ imageSrc, onSave, onCancel }) {
           {activeTab === "crop" && (
             <button
               onClick={handleCropApply}
-              disabled={isSaving}
+              disabled={isSaving || !croppedAreaPixels}
               className="px-6 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors disabled:opacity-50">
               {isSaving ? "Processing..." : "Apply Crop"}
             </button>

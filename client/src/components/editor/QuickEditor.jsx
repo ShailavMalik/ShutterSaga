@@ -25,6 +25,11 @@ function QuickEditor({ imageSrc, photoId, onClose, onApply }) {
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
   const [showSaved, setShowSaved] = useState(false);
+  const [imageDimensions, setImageDimensions] = useState({
+    width: 0,
+    height: 0,
+  });
+  const [aspect, setAspect] = useState(4 / 3); // Default aspect ratio
 
   // Fetch image via proxy to avoid CORS issues
   useEffect(() => {
@@ -73,6 +78,19 @@ function QuickEditor({ imageSrc, photoId, onClose, onApply }) {
       }
     };
   }, [imageSrc, photoId]);
+
+  // Load image dimensions and set natural aspect ratio
+  useEffect(() => {
+    if (!localImageUrl) return;
+
+    const img = new Image();
+    img.onload = () => {
+      setImageDimensions({ width: img.width, height: img.height });
+      // Set initial aspect ratio based on image's natural dimensions
+      setAspect(img.width / img.height);
+    };
+    img.src = localImageUrl;
+  }, [localImageUrl]);
 
   const initializeCanvas = useCallback(() => {
     const canvas = canvasRef.current;
@@ -496,15 +514,100 @@ function QuickEditor({ imageSrc, photoId, onClose, onApply }) {
                   image={localImageUrl}
                   crop={crop}
                   zoom={zoom}
-                  aspect={4 / 3}
+                  aspect={aspect}
                   onCropChange={setCrop}
                   onCropComplete={onCropComplete}
                   onZoomChange={setZoom}
                   showGrid={true}
+                  objectFit="contain"
                 />
               </div>
 
               <div className="space-y-4">
+                {/* Aspect Ratio Selection */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Aspect Ratio
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setAspect(undefined)}
+                      className={`px-3 py-1 text-sm rounded-lg border transition-colors ${
+                        aspect === undefined
+                          ? "bg-indigo-600 text-white border-indigo-600"
+                          : "border-gray-300 hover:border-indigo-400"
+                      }`}>
+                      Free
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setAspect(
+                          imageDimensions.width / imageDimensions.height
+                        )
+                      }
+                      className={`px-3 py-1 text-sm rounded-lg border transition-colors ${
+                        aspect ===
+                        imageDimensions.width / imageDimensions.height
+                          ? "bg-indigo-600 text-white border-indigo-600"
+                          : "border-gray-300 hover:border-indigo-400"
+                      }`}>
+                      Original
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setAspect(1)}
+                      className={`px-3 py-1 text-sm rounded-lg border transition-colors ${
+                        aspect === 1
+                          ? "bg-indigo-600 text-white border-indigo-600"
+                          : "border-gray-300 hover:border-indigo-400"
+                      }`}>
+                      1:1
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setAspect(4 / 3)}
+                      className={`px-3 py-1 text-sm rounded-lg border transition-colors ${
+                        aspect === 4 / 3
+                          ? "bg-indigo-600 text-white border-indigo-600"
+                          : "border-gray-300 hover:border-indigo-400"
+                      }`}>
+                      4:3
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setAspect(16 / 9)}
+                      className={`px-3 py-1 text-sm rounded-lg border transition-colors ${
+                        aspect === 16 / 9
+                          ? "bg-indigo-600 text-white border-indigo-600"
+                          : "border-gray-300 hover:border-indigo-400"
+                      }`}>
+                      16:9
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setAspect(3 / 4)}
+                      className={`px-3 py-1 text-sm rounded-lg border transition-colors ${
+                        aspect === 3 / 4
+                          ? "bg-indigo-600 text-white border-indigo-600"
+                          : "border-gray-300 hover:border-indigo-400"
+                      }`}>
+                      3:4
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setAspect(9 / 16)}
+                      className={`px-3 py-1 text-sm rounded-lg border transition-colors ${
+                        aspect === 9 / 16
+                          ? "bg-indigo-600 text-white border-indigo-600"
+                          : "border-gray-300 hover:border-indigo-400"
+                      }`}>
+                      9:16
+                    </button>
+                  </div>
+                </div>
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Zoom ({zoom.toFixed(1)}x)
