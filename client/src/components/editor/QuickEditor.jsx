@@ -4,7 +4,25 @@ import { photosAPI } from "../../services/api";
 import "./QuickEditor.css";
 
 function QuickEditor({ imageSrc, photoId, onClose, onApply }) {
+  // State
   const [activeTab, setActiveTab] = useState("crop");
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [showSaved, setShowSaved] = useState(false);
+
+  // Image
+  const [localImageUrl, setLocalImageUrl] = useState(null);
+  const [displayImage, setDisplayImage] = useState(null);
+  const [imageDimensions, setImageDimensions] = useState({ width: 0, height: 0 });
+
+  // Crop
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [aspect, setAspect] = useState(4 / 3);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+
+  // Drawing & Filters
   const canvasRef = useRef(null);
   const filterCanvasRef = useRef(null);
   const [isDrawing, setIsDrawing] = useState(false);
@@ -15,132 +33,100 @@ function QuickEditor({ imageSrc, photoId, onClose, onApply }) {
   const [saturation, setSaturation] = useState(100);
   const [viewZoom, setViewZoom] = useState(1);
 
-  // Crop states
-  const [crop, setCrop] = useState({ x: 0, y: 0 });
-  const [zoom, setZoom] = useState(1);
-  const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
-  const [localImageUrl, setLocalImageUrl] = useState(null);
-  const [displayImage, setDisplayImage] = useState(null);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [loadError, setLoadError] = useState(null);
-  const [showSaved, setShowSaved] = useState(false);
-  const [imageDimensions, setImageDimensions] = useState({
-    width: 0,
-    height: 0,
-  });
-  const [aspect, setAspect] = useState(4 / 3); // Default aspect ratio
-
-  // Fetch image via proxy to avoid CORS issues
+  // Load image (from gallery or local upload)
   useEffect(() => {
     let currentUrl = null;
 
-    const fetchImage = async () => {
+    const loadImage = async () => {
       setIsLoading(true);
       setLoadError(null);
       try {
-        // Use proxy endpoint if photoId is provided
         if (photoId) {
+          // From gallery - use proxy to avoid CORS
           const response = await photosAPI.getImageProxy(photoId);
-          const localUrl = URL.createObjectURL(response.data);
-          currentUrl = localUrl;
-          setLocalImageUrl(localUrl);
-          setDisplayImage(localUrl);
+          currentUrl = URL.createObjectURL(response.data);
+          setLocalImageUrl(currentUrl);
+          setDisplayImage(currentUrl);
         } else if (imageSrc) {
-          // For local files (blob URLs or data URLs), use directly
+          // Local file
           if (imageSrc.startsWith("blob:") || imageSrc.startsWith("data:")) {
             setLocalImageUrl(imageSrc);
             setDisplayImage(imageSrc);
           } else {
-            // Try direct fetch for other URLs
             const response = await fetch(imageSrc);
             const blob = await response.blob();
-            const localUrl = URL.createObjectURL(blob);
-            currentUrl = localUrl;
-            setLocalImageUrl(localUrl);
-            setDisplayImage(localUrl);
+            currentUrl = URL.createObjectURL(blob);
+            setLocalImageUrl(currentUrl);
+            setDisplayImage(currentUrl);
           }
         }
       } catch (error) {
-        console.error("Failed to fetch image:", error);
-        setLoadError("Failed to load image for editing. Please try again.");
+        console.error("Failed to load image:", error);
+        setLoadError("Failed to load image for editing");
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchImage();
+    loadImage();
 
-    // Cleanup blob URL on unmount or when imageSrc/photoId changes
+    // Cleanup
     return () => {
-      if (currentUrl && currentUrl.startsWith("blob:")) {
+      if (currentUrl?.startsWith("blob:")) {
         URL.revokeObjectURL(currentUrl);
       }
     };
   }, [imageSrc, photoId]);
 
-  // Load image dimensions and set natural aspect ratio
+  // Get image dimensions for aspect ratio
   useEffect(() => {
     if (!localImageUrl) return;
-
+    
     const img = new Image();
     img.onload = () => {
       setImageDimensions({ width: img.width, height: img.height });
-      // Set initial aspect ratio based on image's natural dimensions
       setAspect(img.width / img.height);
     };
     img.src = localImageUrl;
   }, [localImageUrl]);
 
+  // Initialize canvas for drawing annotations
+  // Sets up canvas dimensions to match image and loads image for drawing
   const initializeCanvas = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas || !displayImage) return;
 
     const img = new Image();
-
     img.onload = () => {
       canvas.width = img.naturalWidth;
       canvas.height = img.naturalHeight;
-      const ctx = canvas.getContext("2d");
-      // Draw scaled to contain within canvas size if styles apply
-      ctx.drawImage(img, 0, 0, img.naturalWidth, img.naturalHeight);
+      canvas.getContext("2d").drawImage(img, 0, 0, img.naturalWidth, img.naturalHeight);
     };
-
-    img.onerror = (e) => {
-      console.error("Failed to load image for canvas:", e);
-    };
-
     img.src = displayImage;
   }, [displayImage]);
 
+  // Initialize canvas for filter preview
+  // Separate canvas used to show filter effects without affecting drawing canvas
   const initializeFilterCanvas = useCallback(() => {
     const canvas = filterCanvasRef.current;
     if (!canvas || !displayImage) return;
 
     const img = new Image();
-
     img.onload = () => {
       canvas.width = img.naturalWidth;
       canvas.height = img.naturalHeight;
-      const ctx = canvas.getContext("2d");
-      ctx.drawImage(img, 0, 0, img.naturalWidth, img.naturalHeight);
+      canvas.getContext("2d").drawImage(img, 0, 0, img.naturalWidth, img.naturalHeight);
     };
-
-    img.onerror = (e) => {
-      console.error("Failed to load image for filter canvas:", e);
-    };
-
     img.src = displayImage;
   }, [displayImage]);
 
-  // Initialize canvas when switching to annotate tab
+  // Switch tabs and initialize canvases
   useEffect(() => {
     if (activeTab === "annotate" && displayImage) {
       initializeCanvas();
     }
   }, [activeTab, displayImage, initializeCanvas]);
 
-  // Initialize filter canvas when switching to filters tab
   useEffect(() => {
     if (activeTab === "filters" && displayImage) {
       initializeFilterCanvas();
@@ -151,20 +137,19 @@ function QuickEditor({ imageSrc, photoId, onClose, onApply }) {
     setCroppedAreaPixels(croppedAreaPixels);
   }, []);
 
-  // Create cropped image from canvas
+  // Crop image - extract selected area and return blob URL for preview
   const createCroppedImage = useCallback(async () => {
     if (!croppedAreaPixels || !localImageUrl) return null;
 
     return new Promise((resolve, reject) => {
       const img = new Image();
-
       img.onload = () => {
         const canvas = document.createElement("canvas");
-        const ctx = canvas.getContext("2d");
-
         canvas.width = croppedAreaPixels.width;
         canvas.height = croppedAreaPixels.height;
 
+        const ctx = canvas.getContext("2d");
+        // Draw the selected crop region onto new canvas
         ctx.drawImage(
           img,
           croppedAreaPixels.x,
@@ -177,28 +162,20 @@ function QuickEditor({ imageSrc, photoId, onClose, onApply }) {
           croppedAreaPixels.height
         );
 
-        canvas.toBlob(
-          (blob) => {
-            if (blob) {
-              const url = URL.createObjectURL(blob);
-              resolve(url);
-            } else {
-              reject(new Error("Failed to create blob"));
-            }
-          },
-          "image/jpeg",
-          0.95
-        );
+        // Convert canvas to blob and create object URL
+        canvas.toBlob((blob) => {
+          if (blob) {
+            resolve(URL.createObjectURL(blob));
+          } else {
+            reject(new Error("Failed to create blob"));
+          }
+        }, "image/jpeg", 0.95);
       };
 
-      img.onerror = () => {
-        reject(new Error("Failed to load image"));
-      };
-
+      img.onerror = () => reject(new Error("Failed to load image"));
       img.src = localImageUrl;
     });
-  }, [croppedAreaPixels, localImageUrl]);
-
+  // Apply crop and switch to annotation tab
   const handleCropApply = async () => {
     if (!croppedAreaPixels) {
       alert("Please select an area to crop");
@@ -210,6 +187,8 @@ function QuickEditor({ imageSrc, photoId, onClose, onApply }) {
     try {
       const croppedUrl = await createCroppedImage();
       if (croppedUrl) {
+        setDisplayImage(croppedUrl); // Update display with cropped version
+        setActiveTab("annotate"); // Switch to drawing tab
         setDisplayImage(croppedUrl);
         setActiveTab("annotate");
       }
@@ -220,7 +199,7 @@ function QuickEditor({ imageSrc, photoId, onClose, onApply }) {
       setIsProcessing(false);
     }
   };
-
+Start drawing on canvas - initialize brush and position
   const handleCanvasMouseDown = (e) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -228,16 +207,20 @@ function QuickEditor({ imageSrc, photoId, onClose, onApply }) {
     const rect = canvas.getBoundingClientRect();
     const ctx = canvas.getContext("2d");
 
+    // Set brush properties
     ctx.strokeStyle = drawingColor;
     ctx.lineWidth = brushSize;
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
+
+    // Calculate position relative to canvas    ctx.lineJoin = "round";
 
     const x = (e.clientX - rect.left) * (canvas.width / rect.width);
     const y = (e.clientY - rect.top) * (canvas.height / rect.height);
 
     ctx.beginPath();
     ctx.moveTo(x, y);
+  // Draw line as mouse moves - continuous strokes from last to current position
     setIsDrawing(true);
   };
 
@@ -254,14 +237,15 @@ function QuickEditor({ imageSrc, photoId, onClose, onApply }) {
     const y = (e.clientY - rect.top) * (canvas.height / rect.height);
 
     ctx.lineTo(x, y);
+  // Stop drawing when mouse is released
     ctx.stroke();
   };
 
   const handleCanvasMouseUp = () => {
     setIsDrawing(false);
-  };
+  };event handlers - mirror mouse event behavior for mobile support
 
-  // Touch event handlers for mobile support
+  // Touch support for mobile
   const handleCanvasTouchStart = (e) => {
     e.preventDefault();
     const touch = e.touches[0];
@@ -276,8 +260,7 @@ function QuickEditor({ imageSrc, photoId, onClose, onApply }) {
 
   const handleCanvasTouchEnd = () => {
     handleCanvasMouseUp();
-  };
-
+  // Add text annotation to canvas at fixed position with current color
   const handleAddText = () => {
     const text = prompt("Enter text:");
     if (!text) return;
@@ -286,22 +269,23 @@ function QuickEditor({ imageSrc, photoId, onClose, onApply }) {
     if (!canvas) return;
 
     const ctx = canvas.getContext("2d");
-
     ctx.font = "40px Arial";
     ctx.fillStyle = drawingColor;
     ctx.textBaseline = "top";
+    ctx.fillText(text, 20, 20); // Fixed position for simplicityr;
+    ctx.textBaseline = "top";
     ctx.fillText(text, 20, 20);
-  };
-
+  // Clear all drawn annotations and reload the original image
+  const handleClearCanvas = () => {
+    initializeCanvas(); // Reload clean image
   const handleClearCanvas = () => {
     initializeCanvas();
-  };
-
+  };brightness, contrast, and saturation filters to image
+  // Uses pixel-level manipulation to adjust color values
   const applyFilters = () => {
     const canvas = filterCanvasRef.current;
     if (!canvas) return;
 
-    // First reinitialize canvas with original image
     const img = new Image();
     img.onload = () => {
       canvas.width = img.naturalWidth;
@@ -309,28 +293,30 @@ function QuickEditor({ imageSrc, photoId, onClose, onApply }) {
       const ctx = canvas.getContext("2d");
       ctx.drawImage(img, 0, 0);
 
-      // Apply filters
       const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const data = imgData.data;
 
+      // Process each pixel (4 values: R, G, B, A)
       for (let i = 0; i < data.length; i += 4) {
-        // Brightness
+        // Apply brightness multiplier
         let r = data[i] * (brightness / 100);
         let g = data[i + 1] * (brightness / 100);
         let b = data[i + 2] * (brightness / 100);
 
-        // Contrast
-        const contrastFactor = contrast / 100;
-        r = ((r / 255 - 0.5) * contrastFactor + 0.5) * 255;
-        g = ((g / 255 - 0.5) * contrastFactor + 0.5) * 255;
-        b = ((b / 255 - 0.5) * contrastFactor + 0.5) * 255;
+        // Apply contrast - shift midtones then scale(brightness / 100);
 
-        // Saturation
+        // Contrast adjustment
+        const cf = contrast / 100;
+        r = ((r / 255 - 0.5) * cf + 0.5) * 255;
+        g = ((g / 255 - 0.5) * cf + 0.5) * 255;
+        b = ((b / 255 - 0.5) * cf + 0.5) * 255;
+
+        // Saturation adjustment
         const gray = 0.2989 * r + 0.587 * g + 0.114 * b;
-        const satFactor = saturation / 100;
-        r = gray + satFactor * (r - gray);
-        g = gray + satFactor * (g - gray);
-        b = gray + satFactor * (b - gray);
+        const sf = saturation / 100;
+        r = gray + sf * (r - gray);
+        g = gray + sf * (g - gray);
+        b = gray + sf * (b - gray);
 
         data[i] = Math.min(255, Math.max(0, r));
         data[i + 1] = Math.min(255, Math.max(0, g));
@@ -349,31 +335,32 @@ function QuickEditor({ imageSrc, photoId, onClose, onApply }) {
     initializeFilterCanvas();
   };
 
+  // Show success message
   const notifySaved = () => {
     setShowSaved(true);
     setTimeout(() => setShowSaved(false), 1600);
   };
 
+  // Save edited image
   const handleSave = async () => {
-    // If on crop tab, create cropped image directly
     if (activeTab === "crop") {
+      // Crop tab
       if (!croppedAreaPixels) {
-        alert("Please select an area to crop first");
+        alert("Please select an area to crop");
         return;
       }
       setIsProcessing(true);
       try {
         const croppedUrl = await createCroppedImage();
         if (croppedUrl) {
-          // Convert blob URL to blob
           const response = await fetch(croppedUrl);
           const blob = await response.blob();
           URL.revokeObjectURL(croppedUrl);
-          await Promise.resolve(onApply(blob));
+          await onApply(blob);
           notifySaved();
         }
       } catch (error) {
-        console.error("Save failed:", error);
+        console.error("Crop save failed:", error);
         alert("Failed to save cropped image");
       } finally {
         setIsProcessing(false);
@@ -381,7 +368,7 @@ function QuickEditor({ imageSrc, photoId, onClose, onApply }) {
       return;
     }
 
-    // For annotate and filters tabs, use canvas
+    // Draw or Filters tab - export canvas
     const canvas =
       activeTab === "filters" ? filterCanvasRef.current : canvasRef.current;
     if (!canvas) {
@@ -391,15 +378,15 @@ function QuickEditor({ imageSrc, photoId, onClose, onApply }) {
 
     canvas.toBlob(
       async (blob) => {
-        if (blob) {
-          try {
-            await Promise.resolve(onApply(blob));
-            notifySaved();
-          } catch (err) {
-            console.error("Save failed:", err);
-            alert("Failed to save image");
-          }
-        } else {
+        if (!blob) {
+          alert("Failed to save image");
+          return;
+        }
+        try {
+          await onApply(blob);
+          notifySaved();
+        } catch (err) {
+          console.error("Save failed:", err);
           alert("Failed to save image");
         }
       },
@@ -524,76 +511,35 @@ function QuickEditor({ imageSrc, photoId, onClose, onApply }) {
               </div>
 
               <div className="space-y-4">
-                {/* Aspect Ratio Selection */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Aspect Ratio
                   </label>
                   <div className="flex flex-wrap gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setAspect(undefined)}
-                      className={`px-3 py-1 text-sm rounded-lg border transition-colors ${
-                        aspect === undefined
-                          ? "bg-indigo-600 text-white border-indigo-600"
-                          : "border-gray-300 hover:border-indigo-400"
-                      }`}>
-                      Free
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setAspect(
-                          imageDimensions.width / imageDimensions.height
-                        )
-                      }
-                      className={`px-3 py-1 text-sm rounded-lg border transition-colors ${
-                        aspect ===
-                        imageDimensions.width / imageDimensions.height
-                          ? "bg-indigo-600 text-white border-indigo-600"
-                          : "border-gray-300 hover:border-indigo-400"
-                      }`}>
-                      Original
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setAspect(1)}
-                      className={`px-3 py-1 text-sm rounded-lg border transition-colors ${
-                        aspect === 1
-                          ? "bg-indigo-600 text-white border-indigo-600"
-                          : "border-gray-300 hover:border-indigo-400"
-                      }`}>
-                      1:1
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setAspect(4 / 3)}
-                      className={`px-3 py-1 text-sm rounded-lg border transition-colors ${
-                        aspect === 4 / 3
-                          ? "bg-indigo-600 text-white border-indigo-600"
-                          : "border-gray-300 hover:border-indigo-400"
-                      }`}>
-                      4:3
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setAspect(16 / 9)}
-                      className={`px-3 py-1 text-sm rounded-lg border transition-colors ${
-                        aspect === 16 / 9
-                          ? "bg-indigo-600 text-white border-indigo-600"
-                          : "border-gray-300 hover:border-indigo-400"
-                      }`}>
-                      16:9
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setAspect(3 / 4)}
-                      className={`px-3 py-1 text-sm rounded-lg border transition-colors ${
-                        aspect === 3 / 4
-                          ? "bg-indigo-600 text-white border-indigo-600"
-                          : "border-gray-300 hover:border-indigo-400"
-                      }`}>
-                      3:4
+                    {[
+                      { label: "Free", value: undefined },
+                      { label: "Original", value: imageDimensions.width / imageDimensions.height },
+                      { label: "1:1", value: 1 },
+                      { label: "4:3", value: 4 / 3 },
+                      { label: "16:9", value: 16 / 9 },
+                      { label: "3:4", value: 3 / 4 },
+                      { label: "9:16", value: 9 / 16 },
+                    ].map((ratio) => (
+                      <button
+                        key={ratio.label}
+                        type="button"
+                        onClick={() => setAspect(ratio.value)}
+                        className={`px-3 py-1 text-sm rounded-lg border transition-colors ${
+                          aspect === ratio.value
+                            ? "bg-indigo-600 text-white border-indigo-600"
+                            : "border-gray-300 hover:border-indigo-400"
+                        }`}
+                      >
+                        {ratio.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
                     </button>
                     <button
                       type="button"
